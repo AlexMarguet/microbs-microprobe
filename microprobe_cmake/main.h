@@ -4,5 +4,13 @@
 #pragma once
 
 #include <iostream>
+#include <iomanip>
+#include <cstdio>
+
+#ifdef _WIN32
+#include <Windows.h>
+#else
+#include <unistd.h>
+#endif
 
 // TODO: Référencez ici les en-têtes supplémentaires nécessaires à votre programme.
