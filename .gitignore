@@ -34,4 +34,4 @@
 
 # Added by me
 .vs/
-build/
+out/

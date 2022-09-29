@@ -8,7 +8,7 @@ set(EXECUTABLE_OUTPUT_PATH "${CMAKE_BINARY_DIR}")
 
 project ("microprobe_cmake")
 # Ajoutez une source à l'exécutable de ce projet.
-add_executable (microprobe_cmake "microprobe_cmake.cpp" "microprobe_cmake.h"
+add_executable (microprobe_cmake "main.cpp" "main.h"
                 "826api.h")
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
@@ -24,8 +24,12 @@ target_link_libraries(microprobe_cmake PUBLIC test_class)
 # Import external library
 
 add_library(sensoray826 SHARED IMPORTED)
+# set_property(TARGET sensoray826 PROPERTY
+#             IMPORTED_LOCATION "C:/Users/Alexandre/Documents/Cours/PDM/code/microprobe_cmake/libs/s826.dll")
+# set_property(TARGET sensoray826 PROPERTY
+#             IMPORTED_IMPLIB "C:/Users/Alexandre/Documents/Cours/PDM/code/microprobe_cmake/libs/s826.lib")
 set_property(TARGET sensoray826 PROPERTY
-             IMPORTED_LOCATION "C:/Users/Alexandre/Documents/Cours/PDM/code/microprobe_cmake/libs/s826.dll")
+             IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/libs/s826.dll")
 set_property(TARGET sensoray826 PROPERTY
-             IMPORTED_IMPLIB "C:/Users/Alexandre/Documents/Cours/PDM/code/microprobe_cmake/libs/s826.lib")
+             IMPORTED_IMPLIB "${CMAKE_CURRENT_SOURCE_DIR}/libs/s826.lib")
 target_link_libraries(microprobe_cmake PRIVATE sensoray826)

@@ -1,7 +1,7 @@
 ﻿// microprobe_cmake.cpp : définit le point d'entrée de l'application.
 //
 
-#include "microprobe_cmake.h"
+#include "main.h"
 #include "test_class.h"
 #include "826api.h"
 
@@ -15,6 +15,8 @@ int main()
 	cout << S826_CM_XS_10HZ << endl;
 	S826_SystemClose();
 
+
+	cout << "Press any key to end." << endl;
 	string input;
 	cin >> input;
 	return 0;
