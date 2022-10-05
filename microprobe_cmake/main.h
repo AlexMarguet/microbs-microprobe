@@ -3,9 +3,8 @@
 
 #pragma once
 
-#include <iostream>
-#include <iomanip>
-#include <cstdio>
+#ifndef MAIN_H
+#define MAIN_H
 
 #ifdef _WIN32
 #include <Windows.h>
@@ -13,4 +12,12 @@
 #include <unistd.h>
 #endif
 
-// TODO: Référencez ici les en-têtes supplémentaires nécessaires à votre programme.
+#include <iostream>
+#include <iomanip>
+#include <cstdio>
+
+#include "test_class.h"
+#include "sensoray/826api.h"
+#include "sensoray/826.h"
+
+#endif // #ifndef MAIN_H
