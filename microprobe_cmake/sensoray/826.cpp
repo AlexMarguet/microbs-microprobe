@@ -44,7 +44,7 @@ void Sensoray826::DioIn() {
 void Sensoray826::DioOut() {
 	int errcode;
 	uint bitmask[2] = {0, 0};
-	int chan = 23;
+	int chan = 16;
 
 	//uint mode = S826_BITCLR;
 	uint mode = S826_BITSET;
@@ -71,6 +71,63 @@ int Sensoray826::WaitForDioFallingEdge(uint dio)
 	S826_DioCapEnablesWrite(m_board, rise, fall, S826_BITSET); // Enable falling edge detection.
 	return S826_DioCapRead(m_board, fall, 0, S826_WAIT_INFINITE); // Block until falling edge.
 }
+
+// Configure a counter as a 20 ns pulse generator and start it running.
+int Sensoray826::CreateHwTimer(uint chan, uint period) // period in microseconds, channel 0 to 5
+{
+	S826_CounterModeWrite(m_board, chan, // Configure counter mode:
+		S826_CM_K_1MHZ | // clock source = 1 MHz internal
+		S826_CM_PX_START | S826_CM_PX_ZERO | // preload @start and counts==0
+		S826_CM_UD_REVERSE | // count down
+		S826_CM_OM_NOTZERO); // ExtOut = (counts!=0)
+	S826_CounterPreloadWrite(m_board, chan, 0, period); // Set period in microseconds.
+	return S826_CounterStateWrite(m_board, chan, 1); // Start the timer running.
+}
+
+int Sensoray826::RouteCounterOutput(uint ctr, uint dio) //!! NOT THREAD-SAFE, check 66/107
+{
+	uint data[2]; // dio routing mask
+	if ((dio >= S826_NUM_DIO) || (ctr >= S826_NUM_COUNT))
+		return S826_ERR_VALUE; // bad channel number
+	if ((dio & 7) != ctr)
+		return S826_ERR_VALUE; // counter output can't be routed to dio
+	// Route counter output to DIO pin:
+	S826_SafeWrenWrite(m_board, S826_SAFEN_SWE); // Enable writes to DIO signal router.
+	S826_DioOutputSourceRead(m_board, data); // Route counter output to DIO
+	data[dio > 23] |= (1 << (dio % 24)); // without altering other routes.
+	S826_DioOutputSourceWrite(m_board, data);
+	return S826_SafeWrenWrite(m_board, S826_SAFEN_SWD); // Disable writes to DIO signal router.
+}
+
+void Sensoray826::CreatePWM(uint ctr, uint ontime, uint offtime)
+{
+	S826_CounterModeWrite(m_board, ctr, // Configure counter for PWM:
+		S826_CM_K_1MHZ | // clock = internal 1 MHz
+		S826_CM_UD_REVERSE | // count down
+		S826_CM_PX_START | S826_CM_PX_ZERO | // preload @startup and counts==0
+		S826_CM_BP_BOTH | // use both preloads (toggle)
+		S826_CM_OM_PRELOAD); // assert ExtOut during preload0 interval
+	SetPWM(ctr, ontime, offtime); // Program initial on/off times.
+}
+
+int Sensoray826::StartPWM(uint ctr)
+{
+	return S826_CounterStateWrite(m_board, ctr, 1); // Start the PWM generator.
+}
+
+void Sensoray826::SetPWM(uint ctr, uint ontime, uint offtime)
+{
+	S826_CounterPreloadWrite(m_board, ctr, 0, ontime); // On time in us.
+	S826_CounterPreloadWrite(m_board, ctr, 1, offtime); // Off time in us.
+}
+
+void Sensoray826::DioSourceReset() {
+	uint data[2] = { 0, 0 };
+	S826_SafeWrenWrite(m_board, S826_SAFEN_SWE); // Enable writes to DIO signal router.
+	S826_DioOutputSourceWrite(m_board, data);
+	S826_SafeWrenWrite(m_board, S826_SAFEN_SWD); // Disable writes to DIO signal router.
+}
+
 
 void Sensoray826::AdcSetup() {
 	#define TSETTLE -3 // -3 or 3 ? Not clear, page 31/107

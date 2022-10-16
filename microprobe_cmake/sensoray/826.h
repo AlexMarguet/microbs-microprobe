@@ -23,6 +23,18 @@ public:
 
 	int WaitForDioFallingEdge(uint dio);
 
+	int CreateHwTimer(uint chan, uint period);
+
+	int RouteCounterOutput(uint ctr, uint dio);
+
+	void CreatePWM(uint ctr, uint ontime, uint offtime);
+	
+	int StartPWM(uint ctr);
+	
+	void SetPWM(uint ctr, uint ontime, uint offtime);
+
+	void DioSourceReset();
+
 	void AdcSetup();
 
 	void AdcIn();
