@@ -35,3 +35,6 @@
 # Added by me
 .vs/
 out/
+.vscode/
+
+build*

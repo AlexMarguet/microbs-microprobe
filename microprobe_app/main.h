@@ -1,7 +1,4 @@
-﻿// microprobe_cmake.h : fichier Include pour les fichiers Include système standard,
-// ou les fichiers Include spécifiques aux projets.
-
-#pragma once
+﻿#pragma once
 
 #ifndef MAIN_H
 #define MAIN_H
@@ -13,14 +10,13 @@
 #endif
 
 #include <iostream>
-
-#include <fstream>
 #include <iomanip>
 #include <cstdio>
 
-#include "test_class.h"
+#include <QApplication>
+
+#include "mainwindow.h"
 #include "sensoray/826api.h"
 #include "sensoray/826.h"
-#include "tools/data_save.h"
 
 #endif // #ifndef MAIN_H
