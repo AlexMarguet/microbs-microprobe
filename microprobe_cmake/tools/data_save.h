@@ -3,12 +3,24 @@
 
 #include <iostream>
 #include <fstream>
+#include <filesystem>
 
 using namespace std;
 
-namespace tools {
+class DataSaver {
+public:
+	DataSaver();
 
-void createEmptyCsv(string name);
+	void createCsv(string name);
 
-}
+	void writeCsv(string content);
+
+	void closeCsv();
+
+private:
+	fstream m_fout;
+
+	string m_name;
+};
+
 #endif // TOOLS_DATA_SAVE_H

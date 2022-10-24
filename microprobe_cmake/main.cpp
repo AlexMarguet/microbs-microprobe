@@ -4,6 +4,7 @@
 #include "main.h"
 
 using namespace std;
+namespace fs = std::filesystem;
 
 int main()
 {
@@ -27,16 +28,18 @@ int main()
 	// //	Sleep(100);
 	// //}
 
-	fstream file;
+	DataSaver data_saver;
+	data_saver.createCsv("try.csv");
+	data_saver.writeCsv("a;b;c;\nd,e,f\n");
+	data_saver.closeCsv();
+	////if (!file) cout << "error" << endl;
 
-	file.open("test.txt", fstream::out);
+	//printf("%d\n", (int)file.is_open());
+	//file << "a\n";
 
-	//if (!file) cout << "error" << endl;
-
-	file << flush;
-	file.close();
-
-	printf("%d\n", (int)file.is_open());
+	//file.close();
+	////file.open("test.txt", fstream::out | fstream::in);
+	////file.close();
 	system("pause");
 	return 0;
 }

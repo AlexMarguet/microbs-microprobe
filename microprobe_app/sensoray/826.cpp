@@ -41,45 +41,29 @@ void Sensoray826::Close() {
 }
 
 void Sensoray826::MotorsSetup() {
-	uint ontime = 1000, offtime = 1000;
+	this->CreatePWM(motor_ctr_chan[probe], probe_pulse_ontime, probe_pulse_ontime);
+	this->CreatePWM(motor_ctr_chan[tendon_r], tendon_pulse_ontime, tendon_pulse_ontime);
+	// this->CreatePWM(motor_ctr_chan[tendon_l], tendon_pulse_ontime, tendon_pulse_ontime);
 
-	this->CreatePWM(m_probe_motor_ctr, ontime/10, offtime/10);
-	this->CreatePWM(m_tendon_r_motor_ctr, ontime, offtime);
-	this->CreatePWM(m_tendon_l_motor_ctr, ontime, offtime);
-
-	this->StartPWM(m_probe_motor_ctr);
-	this->StartPWM(m_tendon_r_motor_ctr);
-	this->StartPWM(m_tendon_l_motor_ctr);
+	this->StartPWM(motor_ctr_chan[probe]);
+	this->StartPWM(motor_ctr_chan[tendon_r]);
+	// this->StartPWM(motor_ctr_chan[tendon_l]);
 }
 
 void Sensoray826::MotorOn(Motor motor) {
-	uint ctr, dio;
-	switch(motor) {
-		case probe:		ctr = m_probe_motor_ctr; dio = m_probe_motor_chan; break;
-		case tendon_r:	ctr = m_tendon_r_motor_ctr; dio = m_tendon_r_motor_chan; break;
-		case tendon_l:	ctr = m_tendon_l_motor_ctr; dio = m_tendon_l_motor_chan; break;
-	}
+	uint ctr = motor_ctr_chan[motor];
+	uint dio = motor_pulse_dio[motor];
 	this->RouteCounterOutput(ctr, dio);
 }
 
 void Sensoray826::MotorOff(Motor motor) {
-	uint ctr, dio;
-	switch(motor) {
-		case probe:		ctr = m_probe_motor_ctr; dio = m_probe_motor_chan; break;
-		case tendon_r:	ctr = m_tendon_r_motor_ctr; dio = m_tendon_r_motor_chan; break;
-		case tendon_l:	ctr = m_tendon_l_motor_ctr; dio = m_tendon_l_motor_chan; break;
-	}
-
+	uint ctr = motor_ctr_chan[motor];
+	uint dio = motor_pulse_dio[motor];
 	this->UnrouteCounterOutput(ctr, dio);
 }
 
 void Sensoray826::SetMotorDirection(Motor motor, uint direction) {
-	uint dio;
-	switch(motor) {
-		case probe:		dio = m_probe_dir_chan; break;
-		case tendon_r:	dio = m_tendon_r_dir_chan; break;
-		case tendon_l:	dio = m_tendon_l_dir_chan; break;
-	}
+	uint dio = motor_pulse_dio[motor];
 
 	VoltLevel level = low;
 	if (direction) {
@@ -90,20 +74,15 @@ void Sensoray826::SetMotorDirection(Motor motor, uint direction) {
 }
 
 void Sensoray826::SetMotorSpeed(Motor motor, uint speed) {
-	float period = 1/ (speed * m_step_per_tour);
+	float period = 1/ (speed * step_per_tour);
 	uint pulse_ontime, pulse_offtime;
 	if (period >= MIN_ALLOWED_PWM_T * 2) {
 		pulse_ontime = (uint) period/2;
 		pulse_offtime = (uint) period/2;
 	}
 
-	uint ctr, dio;
-	switch(motor) {
-		case probe:		ctr = m_probe_motor_ctr; dio = m_probe_motor_chan; break;
-		case tendon_r:	ctr = m_tendon_r_motor_ctr; dio = m_tendon_r_motor_chan; break;
-		case tendon_l:	ctr = m_tendon_l_motor_ctr; dio = m_tendon_l_motor_chan; break;
-	}
-
+	uint ctr = motor_ctr_chan[motor];
+	uint dio = motor_pulse_dio[motor];
 	this->SetPWM(ctr, pulse_ontime, pulse_offtime);
 }
 

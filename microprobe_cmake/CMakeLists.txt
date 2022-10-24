@@ -6,8 +6,8 @@ cmake_minimum_required (VERSION 3.8)
 project ("microprobe_cmake")
 # Ajoutez une source à l'exécutable de ce projet.
 add_executable (microprobe_cmake "main.cpp" "main.h"
-                "sensoray/826api.h" "sensoray/826.h" "sensoray/826.cpp")
-
+                "sensoray/826api.h" "sensoray/826.h" "sensoray/826.cpp"
+                "tools/data_save.cpp" "tools/data_save.h")
 if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET microprobe_cmake PROPERTY CXX_STANDARD 20)
 endif()
