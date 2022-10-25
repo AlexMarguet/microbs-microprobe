@@ -19,9 +19,13 @@ set(PROJECT_SOURCES
         mainwindow.cpp
         mainwindow.h
         mainwindow.ui
+        controller.c
+        controller.h
         sensoray/826api.h
         sensoray/826.cpp
         sensoray/826.h
+        tools/data_saver.cpp
+        tools/data_saver.h
         # qwidgets/qcustomplot.cpp
         # qwidgets/qcustomplot.h
 )

@@ -13,31 +13,36 @@
 class Sensoray826 {
 public:
 	// Constants
-	enum Motor {probe, tendon_r, tendon_l};
+	enum Motor {probe, tendon_r};
 	enum VoltLevel {low = S826_BITSET, high = S826_BITCLR};
+	enum LoadSensor {load_sensor_r};
 
-	static const uint motor_pulse_dio[] = {1, 11};
-	static const uint motor_dir_dio[] = {0, 12};
-	static const uint motor_ctr_chan[] = {1, 3};
+	static const uint max_pwm_freq;
 
-	static const uint adc_range = 1;
-	static const uint adc_in_chan = 0;
+	static const uint motor_pulse_dio[];
+	static const uint motor_dir_dio[];
+	static const uint motor_ctr_chan[];
 
-	static const uint tendon_f_max = 225;	// [mN], 90%*250
-	static const uint tendon_f_min = 20;	// [mN]
+	static const uint adc_gain;
+	static const int adc_t_settle;
+	static const uint adc_in_chan;
+	static const float sensor_range;
 
-	static const float deg_per_step = 1.8;
-	static const uint step_per_tour = 200;
+	static const float tendon_f_max;
+	static const float tendon_f_min;
 
-	static const uint probe_ustep = 256;
-	static const float probe_radius = 5.;	// [mm]
-	static const uint probe_v_manual = 3;	// [mm/s]
-	static const float probe_pulse_ontime = (1 / (120 * probe_ustep * step_per_tour *((probe_v_manual / probe_radius) / M_PI)) * 10e7;
+	static const float deg_per_step;
+	static const uint step_per_tour;
 
-	static const uint tendon_ustep = 16;
-	static const float tendon_radius = 2.5;	// [mm]
-	static const uint tendon_v_manual = 5;	// [mm/s]
-	static const float tendon_pulse_ontime = (1 / (120 * tendon_ustep * step_per_tour *((tendon_v_manual / tendon_radius) / M_PI)) * 10e7;
+	static const uint probe_ustep;
+	static const float probe_radius;
+	static const uint probe_v_manual;
+	static const float probe_pulse_ontime;
+
+	static const uint tendon_ustep;
+	static const float tendon_radius;
+	static const uint tendon_v_manual;
+	static const float tendon_pulse_ontime;
 
 	Sensoray826();
 
@@ -77,9 +82,11 @@ public:
 
 	void DioSourceReset();
 
+	float getLoadSensor(LoadSensor load_sensor);
+
 	void AdcSetup();
 
-	void AdcIn();
+	int AdcIn();
 
 	void DacOut();
 

@@ -9,6 +9,10 @@ namespace fs = std::filesystem;
 int main()
 {
 	cout << "Microprobe program - Version = 0.1" << endl << endl;
+
+	int test[2] = {1};
+
+	cout << test[0] << test[1] << endl;
 	
 	// Sensoray826 board;
 
@@ -28,10 +32,10 @@ int main()
 	// //	Sleep(100);
 	// //}
 
-	DataSaver data_saver;
-	data_saver.createCsv("try.csv");
-	data_saver.writeCsv("a;b;c;\nd,e,f\n");
-	data_saver.closeCsv();
+	//DataSaver data_saver;
+	//data_saver.createCsv("try.csv");
+	//data_saver.writeCsv("a;b;c;\nd,e,f\n");
+	//data_saver.closeCsv();
 	////if (!file) cout << "error" << endl;
 
 	//printf("%d\n", (int)file.is_open());
