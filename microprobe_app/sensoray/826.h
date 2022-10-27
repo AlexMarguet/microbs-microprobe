@@ -1,6 +1,12 @@
 #ifndef SENSORAY_826_H
 #define SENSORAY_826_H
 
+#ifdef _WIN32
+#include <Windows.h>
+#else
+#include <unistd.h>
+#endif
+
 #include <iostream>
 #include <iomanip>
 #include <cstdio>
@@ -82,16 +88,21 @@ public:
 
 	void DioSourceReset();
 
+	void loadSensorCalibration(LoadSensor load_sensor);
+
 	float getLoadSensor(LoadSensor load_sensor);
 
 	void AdcSetup();
 
-	int AdcIn();
+	int16_t AdcIn();
 
 	void DacOut();
 
 private:
 	uint m_board = 0;
+
+	float m_load_sensor_offset = -26.2909;
+	float m_load_sensor_drift = 2.39658;
 };
 
 #endif // #ifndef SENSORAY_826_H

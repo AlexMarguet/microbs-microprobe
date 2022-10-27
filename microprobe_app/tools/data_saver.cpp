@@ -8,8 +8,11 @@ DataSaver::DataSaver() {
 
 void DataSaver::createCsv(string name) {
     m_name = name;
-    filesystem::current_path("C:\\Users\\Alexandre\\Documents\\Cours\\PDM\\microbs-microprobe\\microprobe_cmake\\out\\data");
+    // filesystem::current_path("C:\\Users\\Alexandre\\Documents\\Cours\\PDM\\microbs-microprobe\\microprobe_cmake\\out\\data");
+    filesystem::current_path("C:\\Users\\MAGNETO\\Desktop\\Lucio\\AMarguet\\microbs-microprobe\\build-microprobe_app-Desktop_Qt_6_4_0_MinGW_64_bit-Debug\\Data");
+    
     m_fout.open(m_name, fstream::out);
+    m_fout << "time" << separator << "load" << endl;
 }
 
 void DataSaver::writeCsv(string content) {
@@ -18,10 +21,8 @@ void DataSaver::writeCsv(string content) {
 }
 
 void DataSaver::writeCsv(int size, float* load) {
-    m_fout << "time;load" << endl;
-    
     for (int i = 0; i < size; i++) {
-        m_fout << i << ';' << load[i] << endl;
+        m_fout << i << separator << load[i] << endl;
     }
 }
 

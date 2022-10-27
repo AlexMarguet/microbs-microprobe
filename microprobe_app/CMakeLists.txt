@@ -19,7 +19,7 @@ set(PROJECT_SOURCES
         mainwindow.cpp
         mainwindow.h
         mainwindow.ui
-        controller.c
+        controller.cpp
         controller.h
         sensoray/826api.h
         sensoray/826.cpp

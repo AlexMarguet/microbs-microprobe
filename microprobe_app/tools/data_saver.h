@@ -9,6 +9,8 @@ using namespace std;
 
 class DataSaver {
 public:
+	static const char separator = ',';
+	
 	DataSaver();
 
 	void createCsv(string name);

@@ -223,6 +223,42 @@ void Sensoray826::DioSourceReset() {
 	S826_SafeWrenWrite(m_board, S826_SAFEN_SWD); // Disable writes to DIO signal router.
 }
 
+void Sensoray826::loadSensorCalibration(LoadSensor load_sensor) {
+	float expected_weight_1 = -14.9, expected_weight_2 = -25.0, expected_weight_3 = -36.9;
+
+	cout << "Remove weights from the sensor" << endl;
+	Sleep(10000);
+	m_load_sensor_offset = this->getLoadSensor(load_sensor);
+	cout << "Offset: " << m_load_sensor_offset << endl;
+
+	cout << "Put weight 1 on the sensor" << endl;
+	Sleep(10000);
+	float weight_1 = this->getLoadSensor(load_sensor);
+	cout << "Weight 1: " << weight_1 << endl;
+
+	cout << "Put weight 2 on the sensor" << endl;
+	Sleep(10000);
+	float weight_2 = this->getLoadSensor(load_sensor);
+	cout << "Weight 2: " << weight_2 << endl;
+
+	cout << "Put weight 3 on the sensor" << endl;
+	Sleep(10000);
+	float weight_3 = this->getLoadSensor(load_sensor);
+	cout << "Weight 3: " << weight_3 << endl;
+
+	float drift = (weight_1/expected_weight_1 + weight_2/expected_weight_2 + weight_3/expected_weight_3) / 3;
+	cout << "Drift: " << drift << endl;
+
+	if (drift < 1.) {
+		cout << "Drift too low, corrected to 1." << endl;
+		drift = 1.;
+	}
+	m_load_sensor_drift = drift;
+	
+	cout << "Corrected weights: " << weight_1/drift << " " <<weight_2/drift << " " << weight_3/drift << endl;
+}
+
+
 float Sensoray826::getLoadSensor(LoadSensor load_sensor) {
 	float adc_val = (float)this->AdcIn();
 	int max_val;
@@ -232,7 +268,8 @@ float Sensoray826::getLoadSensor(LoadSensor load_sensor) {
 		max_val = 0x7FFF;
 	}
 	
-	return (adc_val * sensor_range) / max_val;
+	float out = (adc_val * sensor_range) / max_val;
+	return (out - m_load_sensor_offset) / m_load_sensor_drift;
 }
 
 void Sensoray826::AdcSetup() {
@@ -242,21 +279,21 @@ void Sensoray826::AdcSetup() {
 	S826_AdcEnableWrite(m_board, 1); // start adc conversions
 }
 
-int Sensoray826::AdcIn() {
+int16_t Sensoray826::AdcIn() {
 	int errcode;
 	int slotval[16]; // buffer must be sized for 16 slots
 	uint slotlist = 1; // only slot 0 is of interest in this example
 	errcode = S826_AdcRead(m_board, slotval, NULL, &slotlist, 100); // wait for IRQ
 
-	if (errcode != S826_ERR_OK) {
-		printf("AdcIn error code: %d\n", errcode);
-	}
-	else {
-		int16_t converted_data = (int)(slotval[0] & 0xFFFF);
-		printf("%d\n", converted_data);
-	}
-	//printf("Raw adc data = %d", slotval[0] & 0xFFFF);
-	return (int)(slotval[0] & 0xFFFF);
+	// if (errcode != S826_ERR_OK) {
+	// 	printf("AdcIn error code: %d\n", errcode);
+	// }
+	// else {
+	// 	int16_t converted_data = (int)(slotval[0] & 0xFFFF);
+	// 	printf("%d\n", converted_data);
+	// }
+
+	return (int16_t)(slotval[0] & 0xFFFF);
 }
 
 void Sensoray826::DacOut() {

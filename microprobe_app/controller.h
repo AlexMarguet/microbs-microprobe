@@ -1,8 +1,14 @@
 #ifndef CONTROLLER_H
 #define CONTROLLER_H
 
+#ifdef _WIN32
+#include <Windows.h>
+#else
+#include <unistd.h>
+#endif
+
 #include <iostream>
-#include "sensoray/s826.h"
+#include "sensoray/826.h"
 #include "tools/data_saver.h"
 
 
@@ -17,9 +23,9 @@ public:
     void insertion();
     
 private:
-    Sensoray826 m_board = 0;
+    Sensoray826 m_board;
 
-    float[max_iter] m_data_load = {};
+    float m_data_load[max_iter] = {};
 
 };
 
