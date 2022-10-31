@@ -32,9 +32,9 @@ const uint Sensoray826::tendon_v_manual = 2;	// [mm/s]
 const float Sensoray826::tendon_pulse_ontime = (1 / (120 * tendon_ustep * step_per_tour *((tendon_v_manual / tendon_radius) / M_PI)) * 10e7);
 
 Sensoray826::Sensoray826() {
-	this->Open();
-	this->MotorsSetup();
-	this->AdcSetup();
+	this->open();
+	this->motorsSetup();
+	this->adcSetup();
 }
 
 // Sensoray826::~Sensoray826() {
@@ -42,7 +42,7 @@ Sensoray826::Sensoray826() {
 // 	this->Close();
 // }
 
-void Sensoray826::Open() {
+void Sensoray826::open() {
 	// Open boards
 	int board_flags = S826_SystemOpen();
 	if (board_flags < 0)
@@ -65,34 +65,34 @@ void Sensoray826::Open() {
 	cout << "Board: " << m_board << endl << "API version: " << hex << api << endl << "Driver version: " << driver << endl << "Board rev: " << bdrev << endl << "FPGA rev: " << fpgarev << dec << endl;
 }
 
-void Sensoray826::Close() {
+void Sensoray826::close() {
 	// Close and return
 	cout << "Closing system: " << S826_SystemClose() << endl;
 }
 
-void Sensoray826::MotorsSetup() {
-	this->CreatePWM(motor_ctr_chan[probe], probe_pulse_ontime, probe_pulse_ontime);
-	this->CreatePWM(motor_ctr_chan[tendon_r], tendon_pulse_ontime, tendon_pulse_ontime);
-	// this->CreatePWM(motor_ctr_chan[tendon_l], tendon_pulse_ontime, tendon_pulse_ontime);
+void Sensoray826::motorsSetup() {
+	this->createPWM(motor_ctr_chan[probe], probe_pulse_ontime, probe_pulse_ontime);
+	this->createPWM(motor_ctr_chan[tendon_r], tendon_pulse_ontime, tendon_pulse_ontime);
+	// this->createPWM(motor_ctr_chan[tendon_l], tendon_pulse_ontime, tendon_pulse_ontime);
 
-	this->StartPWM(motor_ctr_chan[probe]);
-	this->StartPWM(motor_ctr_chan[tendon_r]);
-	// this->StartPWM(motor_ctr_chan[tendon_l]);
+	this->startPWM(motor_ctr_chan[probe]);
+	this->startPWM(motor_ctr_chan[tendon_r]);
+	// this->startPWM(motor_ctr_chan[tendon_l]);
 }
 
-void Sensoray826::MotorOn(Motor motor) {
+void Sensoray826::motorOn(Motor motor) {
 	uint ctr = motor_ctr_chan[motor];
 	uint dio = motor_pulse_dio[motor];
-	this->RouteCounterOutput(ctr, dio);
+	this->routeCounterOutput(ctr, dio);
 }
 
-void Sensoray826::MotorOff(Motor motor) {
+void Sensoray826::motorOff(Motor motor) {
 	uint ctr = motor_ctr_chan[motor];
 	uint dio = motor_pulse_dio[motor];
-	this->UnrouteCounterOutput(ctr, dio);
+	this->unrouteCounterOutput(ctr, dio);
 }
 
-void Sensoray826::SetMotorDirection(Motor motor, uint direction) {
+void Sensoray826::setMotorDirection(Motor motor, uint direction) {
 	uint dio = motor_dir_dio[motor];
 
 	VoltLevel level = low;
@@ -100,10 +100,10 @@ void Sensoray826::SetMotorDirection(Motor motor, uint direction) {
 		level = high;
 	}
 
-	this->DioOut(dio, level);
+	this->dioOut(dio, level);
 }
 
-void Sensoray826::SetMotorSpeed(Motor motor, uint speed) {
+void Sensoray826::setMotorSpeed(Motor motor, uint speed) {
 	float period = 1/ (speed * step_per_tour);
 	uint pulse_ontime, pulse_offtime;
 	if (period >= MIN_ALLOWED_PWM_T * 2) {
@@ -113,17 +113,17 @@ void Sensoray826::SetMotorSpeed(Motor motor, uint speed) {
 
 	uint ctr = motor_ctr_chan[motor];
 	uint dio = motor_pulse_dio[motor];
-	this->SetPWM(ctr, pulse_ontime, pulse_offtime);
+	this->setPWM(ctr, pulse_ontime, pulse_offtime);
 }
 
-void Sensoray826::DioIn() {
+void Sensoray826::dioIn() {
 	int errcode;
 	uint data[2];
 	errcode = S826_DioInputRead(m_board, data);
 }
 
 // Pins are active-low: CLR = 5[V] and SET = 0[V]
-void Sensoray826::DioOut(uint dio, VoltLevel level) {
+void Sensoray826::dioOut(uint dio, VoltLevel level) {
 	int errcode;
 	uint data[2] = {0, 0};
 
@@ -141,10 +141,10 @@ void Sensoray826::DioOut(uint dio, VoltLevel level) {
 	
 
 	errcode = S826_DioOutputWrite(m_board, data, level);
-	// printf("DioOut error code: %d\n", errcode);
+	// printf("dioOut error code: %d\n", errcode);
 }
 
-int Sensoray826::WaitForDioFallingEdge(uint dio)
+int Sensoray826::waitForDioFallingEdge(uint dio)
 {
 	uint rise[] = { 0, 0 }; // not interested in rising edge
 	uint fall[] = { (dio < 24) << (dio % 24), (dio > 23) << (dio % 24) }; // interested in falling edge
@@ -153,7 +153,7 @@ int Sensoray826::WaitForDioFallingEdge(uint dio)
 }
 
 // Configure a counter as a 20 ns pulse generator and start it running.
-int Sensoray826::CreateHwTimer(uint chan, uint period) // period in microseconds, channel 0 to 5
+int Sensoray826::createHwTimer(uint chan, uint period) // period in microseconds, channel 0 to 5
 {
 	S826_CounterModeWrite(m_board, chan, // Configure counter mode:
 		S826_CM_K_1MHZ | // clock source = 1 MHz internal
@@ -164,7 +164,7 @@ int Sensoray826::CreateHwTimer(uint chan, uint period) // period in microseconds
 	return S826_CounterStateWrite(m_board, chan, 1); // Start the timer running.
 }
 
-int Sensoray826::RouteCounterOutput(uint ctr, uint dio) //!! NOT THREAD-SAFE, check 66/107
+int Sensoray826::routeCounterOutput(uint ctr, uint dio) //!! NOT THREAD-SAFE, check 66/107
 {
 	uint data[2]; // dio routing mask
 	if ((dio >= S826_NUM_DIO) || (ctr >= S826_NUM_COUNT))
@@ -179,7 +179,7 @@ int Sensoray826::RouteCounterOutput(uint ctr, uint dio) //!! NOT THREAD-SAFE, ch
 	return S826_SafeWrenWrite(m_board, S826_SAFEN_SWD); // Disable writes to DIO signal router.
 }
 
-int Sensoray826::UnrouteCounterOutput(uint ctr, uint dio) //!! NOT THREAD-SAFE, check 66/107
+int Sensoray826::unrouteCounterOutput(uint ctr, uint dio) //!! NOT THREAD-SAFE, check 66/107
 {
 	uint data[2]; // dio routing mask
 	uint full_chan = 0xFFFF;
@@ -197,7 +197,7 @@ int Sensoray826::UnrouteCounterOutput(uint ctr, uint dio) //!! NOT THREAD-SAFE, 
 	return S826_SafeWrenWrite(m_board, S826_SAFEN_SWD); // Disable writes to DIO signal router.
 }
 
-void Sensoray826::CreatePWM(uint ctr, uint ontime, uint offtime)
+void Sensoray826::createPWM(uint ctr, uint ontime, uint offtime)
 {
 	S826_CounterModeWrite(m_board, ctr, // Configure counter for PWM:
 		S826_CM_K_1MHZ | // clock = internal 1 MHz
@@ -205,21 +205,21 @@ void Sensoray826::CreatePWM(uint ctr, uint ontime, uint offtime)
 		S826_CM_PX_START | S826_CM_PX_ZERO | // preload @startup and counts==0
 		S826_CM_BP_BOTH | // use both preloads (toggle)
 		S826_CM_OM_PRELOAD); // assert ExtOut during preload0 interval
-	SetPWM(ctr, ontime, offtime); // Program initial on/off times.
+	setPWM(ctr, ontime, offtime); // Program initial on/off times.
 }
 
-int Sensoray826::StartPWM(uint ctr)
+int Sensoray826::startPWM(uint ctr)
 {
 	return S826_CounterStateWrite(m_board, ctr, 1); // Start the PWM generator.
 }
 
-void Sensoray826::SetPWM(uint ctr, uint ontime, uint offtime)
+void Sensoray826::setPWM(uint ctr, uint ontime, uint offtime)
 {
 	S826_CounterPreloadWrite(m_board, ctr, 0, ontime); // On time in us.
 	S826_CounterPreloadWrite(m_board, ctr, 1, offtime); // Off time in us.
 }
 
-void Sensoray826::DioSourceReset() {
+void Sensoray826::dioSourceReset() {
 	uint data[2] = { 0, 0 };
 	S826_SafeWrenWrite(m_board, S826_SAFEN_SWE); // Enable writes to DIO signal router.
 	S826_DioOutputSourceWrite(m_board, data);
@@ -263,7 +263,7 @@ void Sensoray826::loadSensorCalibration(LoadSensor load_sensor) {
 
 
 float Sensoray826::getLoadSensor(LoadSensor load_sensor) {
-	float adc_val = (float)this->AdcIn();
+	float adc_val = (float)this->adcIn();
 	int max_val;
 	if (adc_val < 0) {
 		max_val = 0x8000;
@@ -275,14 +275,14 @@ float Sensoray826::getLoadSensor(LoadSensor load_sensor) {
 	return (out - m_load_sensor_offset) / m_load_sensor_drift;
 }
 
-void Sensoray826::AdcSetup() {
+void Sensoray826::adcSetup() {
 	S826_AdcSlotConfigWrite(m_board, 0, 0, adc_t_settle, adc_gain); // measuring on slot 0
 	S826_AdcSlotlistWrite(m_board, 1, S826_BITWRITE); // enable slot 0
 	S826_AdcTrigModeWrite(m_board, 0); // trigger mode = continuous
 	S826_AdcEnableWrite(m_board, 1); // start adc conversions
 }
 
-int16_t Sensoray826::AdcIn() {
+int16_t Sensoray826::adcIn() {
 	int errcode;
 	int slotval[16]; // buffer must be sized for 16 slots
 	uint slotlist = 1; // only slot 0 is of interest in this example
@@ -299,6 +299,6 @@ int16_t Sensoray826::AdcIn() {
 	return (int16_t)(slotval[0] & 0xFFFF);
 }
 
-void Sensoray826::DacOut() {
+void Sensoray826::dacOut() {
 
 }

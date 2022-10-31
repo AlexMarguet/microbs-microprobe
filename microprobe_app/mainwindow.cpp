@@ -7,7 +7,7 @@ MainWindow::MainWindow(Sensoray826 board, QWidget *parent)
     ui(new Ui::MainWindow)
     
 {
-    m_board.DioSourceReset();
+    m_board.dioSourceReset();
 
     ui->setupUi(this);
 
@@ -24,31 +24,31 @@ MainWindow::MainWindow(Sensoray826 board, QWidget *parent)
     m_load_sensor->setText(QString::number(1.5));
     
     m_timer = new QTimer(this);
-    connect(m_timer, SIGNAL(timeout()), this, SLOT(UpdateValue()));
+    connect(m_timer, SIGNAL(timeout()), this, SLOT(updateValue()));
     m_timer->start(200);
 
-    connect(m_r_button, SIGNAL(pressed()), this, SLOT(ActivateMotor()));
-    connect(m_l_button, SIGNAL(pressed()), this, SLOT(ActivateMotor()));
-    connect(m_fwd_button, SIGNAL(pressed()), this, SLOT(ActivateMotor()));
+    connect(m_r_button, SIGNAL(pressed()), this, SLOT(activateMotor()));
+    connect(m_l_button, SIGNAL(pressed()), this, SLOT(activateMotor()));
+    connect(m_fwd_button, SIGNAL(pressed()), this, SLOT(activateMotor()));
 
     connect(m_r_button, SIGNAL(released()), this, SLOT(turnOffMotor()));
     connect(m_l_button, SIGNAL(released()), this, SLOT(turnOffMotor()));
     connect(m_fwd_button, SIGNAL(released()), this, SLOT(turnOffMotor()));
 
-    connect(m_setup_button, SIGNAL(pressed()), this, SLOT(LaunchScript()));
-    connect(m_insertion_button, SIGNAL(pressed()), this, SLOT(LaunchScript()));
-    connect(m_calibration_button, SIGNAL(pressed()), this, SLOT(LaunchScript()));
+    connect(m_setup_button, SIGNAL(pressed()), this, SLOT(launchScript()));
+    connect(m_insertion_button, SIGNAL(pressed()), this, SLOT(launchScript()));
+    connect(m_calibration_button, SIGNAL(pressed()), this, SLOT(launchScript()));
 }
 
 MainWindow::~MainWindow()
 {
     m_data_saver.closeCsv();
-    m_board.DioSourceReset();
-    m_board.Close();
+    m_board.dioSourceReset();
+    m_board.close();
     delete ui;
 }
 
-void MainWindow::ActivateMotor() {
+void MainWindow::activateMotor() {
     QObject* sender_obj = sender();
     // QPushButton* button = qobject_cast<QPushButton*>(sender());
     uint dir = 0;
@@ -64,8 +64,8 @@ void MainWindow::ActivateMotor() {
     }
     
     
-    m_board.SetMotorDirection(motor, dir);
-    m_board.MotorOn(motor);
+    m_board.setMotorDirection(motor, dir);
+    m_board.motorOn(motor);
 }
 
 void MainWindow::turnOffMotor() {
@@ -80,11 +80,11 @@ void MainWindow::turnOffMotor() {
     } else if (sender_obj == m_fwd_button) {
         motor = Sensoray826::probe;
     }
-    m_board.MotorOff(motor);
+    m_board.motorOff(motor);
 }
 
 
-void MainWindow::LaunchScript() {
+void MainWindow::launchScript() {
     QObject* sender_obj = sender();
 
     if (sender_obj == m_setup_button) {
@@ -99,7 +99,7 @@ void MainWindow::LaunchScript() {
     }
 }
 
-void MainWindow::UpdateValue() {
+void MainWindow::updateValue() {
     float load_r = m_board.getLoadSensor(Sensoray826::load_sensor_r);
     m_load_sensor->setText(QString::number(load_r));
 }

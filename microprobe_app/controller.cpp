@@ -35,20 +35,20 @@ void Controller::insertion() {
         k++;
 
         if (f >= Sensoray826::tendon_f_min + epsilon) {
-            m_board.SetMotorDirection(Sensoray826::tendon_r, forward);
-            m_board.MotorOn(Sensoray826::tendon_r);
+            m_board.setMotorDirection(Sensoray826::tendon_r, forward);
+            m_board.motorOn(Sensoray826::tendon_r);
         } else if (f <= Sensoray826::tendon_f_min - epsilon) {
-            m_board.SetMotorDirection(Sensoray826::tendon_r, backward);
-            m_board.MotorOn(Sensoray826::tendon_r);
+            m_board.setMotorDirection(Sensoray826::tendon_r, backward);
+            m_board.motorOn(Sensoray826::tendon_r);
         } else {
-            m_board.MotorOff(Sensoray826::tendon_r);
+            m_board.motorOff(Sensoray826::tendon_r);
         }
         Sleep(20);
         cout << "loop: " << k << endl;
     }
 
-    m_board.MotorOff(Sensoray826::probe);
-    m_board.MotorOff(Sensoray826::tendon_r);
+    m_board.motorOff(Sensoray826::probe);
+    m_board.motorOff(Sensoray826::tendon_r);
     // m_board.MotorOff(tendon_l);
 
     DataSaver data_saver;

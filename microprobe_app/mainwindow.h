@@ -32,13 +32,13 @@ public:
     ~MainWindow();
 
 private slots:
-    void ActivateMotor();
+    void activateMotor();
 
     void turnOffMotor();
 
-    void LaunchScript();
+    void launchScript();
 
-    void UpdateValue();
+    void updateValue();
 
 private:
     Ui::MainWindow *ui;

@@ -54,49 +54,49 @@ public:
 
 	// ~Sensoray826(); //Didnt work because I was making a copy and not an &
 
-	void Open();
+	void open();
 
-	void Close();
+	void close();
 
-	void MotorsSetup();
+	void motorsSetup();
 
-	void MotorOn(Motor motor);
+	void motorOn(Motor motor);
 
-	void MotorOff(Motor motor);
+	void motorOff(Motor motor);
 
-	void SetMotorDirection(Motor motor, uint direction);
+	void setMotorDirection(Motor motor, uint direction);
 
-	void SetMotorSpeed(Motor motor, uint speed);
+	void setMotorSpeed(Motor motor, uint speed);
 
-	void DioIn();
+	void dioIn();
 
-	void DioOut(uint chan, VoltLevel level);
+	void dioOut(uint chan, VoltLevel level);
 
-	int WaitForDioFallingEdge(uint dio);
+	int waitForDioFallingEdge(uint dio);
 
-	int CreateHwTimer(uint chan, uint period);
+	int createHwTimer(uint chan, uint period);
 
-	int RouteCounterOutput(uint ctr, uint dio);
+	int routeCounterOutput(uint ctr, uint dio);
 
-	int UnrouteCounterOutput(uint ctr, uint dio);
+	int unrouteCounterOutput(uint ctr, uint dio);
 
-	void CreatePWM(uint ctr, uint ontime, uint offtime);
+	void createPWM(uint ctr, uint ontime, uint offtime);
 	
-	int StartPWM(uint ctr);
+	int startPWM(uint ctr);
 	
-	void SetPWM(uint ctr, uint ontime, uint offtime);
+	void setPWM(uint ctr, uint ontime, uint offtime);
 
-	void DioSourceReset();
+	void dioSourceReset();
 
 	void loadSensorCalibration(LoadSensor load_sensor);
 
 	float getLoadSensor(LoadSensor load_sensor);
 
-	void AdcSetup();
+	void adcSetup();
 
-	int16_t AdcIn();
+	int16_t adcIn();
 
-	void DacOut();
+	void dacOut();
 
 private:
 	uint m_board = 0;
