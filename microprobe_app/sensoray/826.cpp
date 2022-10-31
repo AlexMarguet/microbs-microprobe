@@ -8,13 +8,15 @@ const uint Sensoray826::motor_pulse_dio[] = {1, 11};
 const uint Sensoray826::motor_dir_dio[] = {0, 12};
 const uint Sensoray826::motor_ctr_chan[] = {1, 3};
 
-const uint Sensoray826::adc_gain = S826_ADC_GAIN_2;	// -5 <-> +5 [V]
+// const uint Sensoray826::adc_gain = S826_ADC_GAIN_2;	// -5 <-> +5 [V]
+const uint Sensoray826::adc_gain = S826_ADC_GAIN_1;	// -10 <-> +10 [V]
 const int Sensoray826::adc_t_settle = -3;	// -3 or 3 ? Not clear, page 31/107
 const uint Sensoray826::adc_in_chan = 0;
 const float Sensoray826::sensor_range = 250.;
 
-const float Sensoray826::tendon_f_max = 225.;	// [mN], 90%*250
-const float Sensoray826::tendon_f_min = 20.;	// [mN]
+const float Sensoray826::tendon_f_max = -12.;	// [mN]
+const float Sensoray826::tendon_f_min = -5.;	// [mN]
+
 
 const float Sensoray826::deg_per_step = 1.8;
 const uint Sensoray826::step_per_tour = 200;
@@ -26,12 +28,13 @@ const float Sensoray826::probe_pulse_ontime = (1 / (120 * probe_ustep * step_per
 
 const uint Sensoray826::tendon_ustep = 16;
 const float Sensoray826::tendon_radius = 2.5;	// [mm]
-const uint Sensoray826::tendon_v_manual = 5;	// [mm/s]
+const uint Sensoray826::tendon_v_manual = 2;	// [mm/s]
 const float Sensoray826::tendon_pulse_ontime = (1 / (120 * tendon_ustep * step_per_tour *((tendon_v_manual / tendon_radius) / M_PI)) * 10e7);
 
 Sensoray826::Sensoray826() {
 	this->Open();
 	this->MotorsSetup();
+	this->AdcSetup();
 }
 
 // Sensoray826::~Sensoray826() {
@@ -90,7 +93,7 @@ void Sensoray826::MotorOff(Motor motor) {
 }
 
 void Sensoray826::SetMotorDirection(Motor motor, uint direction) {
-	uint dio = motor_pulse_dio[motor];
+	uint dio = motor_dir_dio[motor];
 
 	VoltLevel level = low;
 	if (direction) {

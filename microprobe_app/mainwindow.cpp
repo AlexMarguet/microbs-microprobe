@@ -25,17 +25,19 @@ MainWindow::MainWindow(Sensoray826 board, QWidget *parent)
     
     m_timer = new QTimer(this);
     connect(m_timer, SIGNAL(timeout()), this, SLOT(UpdateValue()));
-    m_timer->start(1000);
+    m_timer->start(200);
 
     connect(m_r_button, SIGNAL(pressed()), this, SLOT(ActivateMotor()));
     connect(m_l_button, SIGNAL(pressed()), this, SLOT(ActivateMotor()));
     connect(m_fwd_button, SIGNAL(pressed()), this, SLOT(ActivateMotor()));
 
+    connect(m_r_button, SIGNAL(released()), this, SLOT(turnOffMotor()));
+    connect(m_l_button, SIGNAL(released()), this, SLOT(turnOffMotor()));
+    connect(m_fwd_button, SIGNAL(released()), this, SLOT(turnOffMotor()));
+
     connect(m_setup_button, SIGNAL(pressed()), this, SLOT(LaunchScript()));
     connect(m_insertion_button, SIGNAL(pressed()), this, SLOT(LaunchScript()));
     connect(m_calibration_button, SIGNAL(pressed()), this, SLOT(LaunchScript()));
-
-    m_data_saver.createCsv("test.csv");
 }
 
 MainWindow::~MainWindow()
@@ -64,7 +66,20 @@ void MainWindow::ActivateMotor() {
     
     m_board.SetMotorDirection(motor, dir);
     m_board.MotorOn(motor);
-    Sleep(60);
+}
+
+void MainWindow::turnOffMotor() {
+    QObject* sender_obj = sender();
+    // QPushButton* button = qobject_cast<QPushButton*>(sender());
+    Sensoray826::Motor motor = Sensoray826::tendon_r;
+
+    if (sender_obj == m_r_button) {
+        std::cout << "right button released" << std::endl;
+    } else if (sender_obj == m_l_button) {
+        std::cout << "left button released" << std::endl;
+    } else if (sender_obj == m_fwd_button) {
+        motor = Sensoray826::probe;
+    }
     m_board.MotorOff(motor);
 }
 
@@ -78,12 +93,13 @@ void MainWindow::LaunchScript() {
     } else if (sender_obj == m_calibration_button) {
         std::cout << "calibration" << std::endl;
         this->m_board.loadSensorCalibration(Sensoray826::load_sensor_r);
+    } else if (sender_obj == m_insertion_button) {
+        std::cout << "insertion" << std::endl;
+        this->m_controller.insertion();
     }
 }
 
 void MainWindow::UpdateValue() {
     float load_r = m_board.getLoadSensor(Sensoray826::load_sensor_r);
     m_load_sensor->setText(QString::number(load_r));
-    m_data_saver.writeCsv(1, &load_r);
-    // m_load_sensor->setText(QString::number(m_board.AdcIn()));
 }

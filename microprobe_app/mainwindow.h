@@ -34,6 +34,8 @@ public:
 private slots:
     void ActivateMotor();
 
+    void turnOffMotor();
+
     void LaunchScript();
 
     void UpdateValue();

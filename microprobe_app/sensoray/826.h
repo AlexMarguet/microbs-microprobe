@@ -101,8 +101,8 @@ public:
 private:
 	uint m_board = 0;
 
-	float m_load_sensor_offset = -26.2909;
-	float m_load_sensor_drift = 2.39658;
+	float m_load_sensor_offset = -27.7023;
+	float m_load_sensor_drift = 2.40586;
 };
 
 #endif // #ifndef SENSORAY_826_H
