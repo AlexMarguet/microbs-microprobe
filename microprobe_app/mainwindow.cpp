@@ -11,10 +11,12 @@ MainWindow::MainWindow(Sensoray826 board, QWidget *parent)
 
     ui->setupUi(this);
 
-    m_fwd_button = findChild<QPushButton*>("pushButton");
-    m_bwd_button = findChild<QPushButton*>("pushButton_2");
-    m_l_button = findChild<QPushButton*>("pushButton_3");
-    m_r_button = findChild<QPushButton*>("pushButton_4");
+    m_probe_fwd_button = findChild<QPushButton*>("pushButton");
+    m_probe_bwd_button = findChild<QPushButton*>("pushButton_2");
+    m_tendon_r_bwd_button = findChild<QPushButton*>("pushButton_3");
+    m_tendon_r_fwd_button = findChild<QPushButton*>("pushButton_4");
+    m_tendon_l_bwd_button = findChild<QPushButton*>("pushButton_8");
+    m_tendon_l_fwd_button = findChild<QPushButton*>("pushButton_11");
 
     m_setup_button = findChild<QPushButton*>("pushButton_5");
     m_insertion_button = findChild<QPushButton*>("pushButton_6");
@@ -27,13 +29,19 @@ MainWindow::MainWindow(Sensoray826 board, QWidget *parent)
     connect(m_timer, SIGNAL(timeout()), this, SLOT(updateValue()));
     m_timer->start(200);
 
-    connect(m_r_button, SIGNAL(pressed()), this, SLOT(activateMotor()));
-    connect(m_l_button, SIGNAL(pressed()), this, SLOT(activateMotor()));
-    connect(m_fwd_button, SIGNAL(pressed()), this, SLOT(activateMotor()));
+    connect(m_probe_fwd_button, SIGNAL(pressed()), this, SLOT(activateMotor()));
+    connect(m_probe_bwd_button, SIGNAL(pressed()), this, SLOT(activateMotor()));
+    connect(m_tendon_r_fwd_button, SIGNAL(pressed()), this, SLOT(activateMotor()));
+    connect(m_tendon_r_bwd_button, SIGNAL(pressed()), this, SLOT(activateMotor()));
+    connect(m_tendon_l_fwd_button, SIGNAL(pressed()), this, SLOT(activateMotor()));
+    connect(m_tendon_l_bwd_button, SIGNAL(pressed()), this, SLOT(activateMotor()));
 
-    connect(m_r_button, SIGNAL(released()), this, SLOT(turnOffMotor()));
-    connect(m_l_button, SIGNAL(released()), this, SLOT(turnOffMotor()));
-    connect(m_fwd_button, SIGNAL(released()), this, SLOT(turnOffMotor()));
+    connect(m_probe_fwd_button, SIGNAL(released()), this, SLOT(turnOffMotor()));
+    connect(m_probe_bwd_button, SIGNAL(released()), this, SLOT(turnOffMotor()));
+    connect(m_tendon_r_fwd_button, SIGNAL(released()), this, SLOT(turnOffMotor()));
+    connect(m_tendon_r_bwd_button, SIGNAL(released()), this, SLOT(turnOffMotor()));
+    connect(m_tendon_l_fwd_button, SIGNAL(released()), this, SLOT(turnOffMotor()));
+    connect(m_tendon_l_bwd_button, SIGNAL(released()), this, SLOT(turnOffMotor()));
 
     connect(m_setup_button, SIGNAL(pressed()), this, SLOT(launchScript()));
     connect(m_insertion_button, SIGNAL(pressed()), this, SLOT(launchScript()));
@@ -54,15 +62,25 @@ void MainWindow::activateMotor() {
     uint dir = 0;
     Sensoray826::Motor motor = Sensoray826::tendon_r;
 
-    if (sender_obj == m_r_button) {
-        std::cout << "right button pressed" << std::endl;
-    } else if (sender_obj == m_l_button) {
-        std::cout << "left button pressed" << std::endl;
+    if (sender_obj == m_tendon_r_fwd_button) {
+        motor = Sensoray826::tendon_r;
+        dir = 0;
+    } else if (sender_obj == m_tendon_r_bwd_button) {
+        motor = Sensoray826::tendon_r;
         dir = 1;
-    } else if (sender_obj == m_fwd_button) {
+    } else if (sender_obj == m_tendon_l_fwd_button) {
+        motor = Sensoray826::tendon_l;
+        dir = 0;
+    } else if (sender_obj == m_tendon_l_bwd_button) {
+        motor = Sensoray826::tendon_l;
+        dir = 1;
+    } else if (sender_obj == m_probe_fwd_button) {
         motor = Sensoray826::probe;
+        dir = 1;
+    } else if (sender_obj == m_probe_bwd_button) {
+        motor = Sensoray826::probe;
+        dir = 0;
     }
-    
     
     m_board.setMotorDirection(motor, dir);
     m_board.motorOn(motor);
@@ -73,13 +91,14 @@ void MainWindow::turnOffMotor() {
     // QPushButton* button = qobject_cast<QPushButton*>(sender());
     Sensoray826::Motor motor = Sensoray826::tendon_r;
 
-    if (sender_obj == m_r_button) {
-        std::cout << "right button released" << std::endl;
-    } else if (sender_obj == m_l_button) {
-        std::cout << "left button released" << std::endl;
-    } else if (sender_obj == m_fwd_button) {
+    if (sender_obj == m_tendon_r_fwd_button || sender_obj == m_tendon_r_bwd_button) {
+        motor = Sensoray826::tendon_r;
+    } else if (sender_obj == m_tendon_l_fwd_button || sender_obj == m_tendon_l_bwd_button) {
+        motor = Sensoray826::tendon_l;
+    } else if (sender_obj == m_probe_fwd_button || sender_obj == m_probe_bwd_button) {
         motor = Sensoray826::probe;
     }
+    
     m_board.motorOff(motor);
 }
 

@@ -4,14 +4,14 @@ using namespace std;
 
 const uint Sensoray826::max_pwm_freq = 100;
 
-const uint Sensoray826::motor_pulse_dio[] = {1, 11};
-const uint Sensoray826::motor_dir_dio[] = {0, 12};
-const uint Sensoray826::motor_ctr_chan[] = {1, 3};
+const uint Sensoray826::motor_pulse_dio[] = {1, 11, 10};	// board layout: {45, 25, 27}
+const uint Sensoray826::motor_dir_dio[] = {0, 12, 13};		// board layout: {47, 23, 21}
+const uint Sensoray826::motor_ctr_chan[] = {1, 3, 2};
 
 // const uint Sensoray826::adc_gain = S826_ADC_GAIN_2;	// -5 <-> +5 [V]
 const uint Sensoray826::adc_gain = S826_ADC_GAIN_1;	// -10 <-> +10 [V]
-const int Sensoray826::adc_t_settle = -3;	// -3 or 3 ? Not clear, page 31/107
-const uint Sensoray826::adc_in_chan = 0;
+const int Sensoray826::adc_t_settle = -3;			// -3 or 3 ? Not clear, page 31/107
+const uint Sensoray826::adc_in_chan[] = {0, 1};		// board layout: {4, 6} on J1
 const float Sensoray826::sensor_range = 250.;
 
 const float Sensoray826::tendon_f_max = -12.;	// [mN]
@@ -22,8 +22,8 @@ const float Sensoray826::deg_per_step = 1.8;
 const uint Sensoray826::step_per_tour = 200;
 
 const uint Sensoray826::probe_ustep = 256;
-const float Sensoray826::probe_radius = 5.;	// [mm]
-const uint Sensoray826::probe_v_manual = 3;	// [mm/s]
+const float Sensoray826::probe_radius = 5.;		// [mm]
+const uint Sensoray826::probe_v_manual = 3;		// [mm/s]
 const float Sensoray826::probe_pulse_ontime = (1 / (120 * probe_ustep * step_per_tour *((probe_v_manual / probe_radius) / M_PI)) * 10e7);
 
 const uint Sensoray826::tendon_ustep = 16;
@@ -73,11 +73,11 @@ void Sensoray826::close() {
 void Sensoray826::motorsSetup() {
 	this->createPWM(motor_ctr_chan[probe], probe_pulse_ontime, probe_pulse_ontime);
 	this->createPWM(motor_ctr_chan[tendon_r], tendon_pulse_ontime, tendon_pulse_ontime);
-	// this->createPWM(motor_ctr_chan[tendon_l], tendon_pulse_ontime, tendon_pulse_ontime);
+	this->createPWM(motor_ctr_chan[tendon_l], tendon_pulse_ontime, tendon_pulse_ontime);
 
 	this->startPWM(motor_ctr_chan[probe]);
 	this->startPWM(motor_ctr_chan[tendon_r]);
-	// this->startPWM(motor_ctr_chan[tendon_l]);
+	this->startPWM(motor_ctr_chan[tendon_l]);
 }
 
 void Sensoray826::motorOn(Motor motor) {
@@ -276,8 +276,10 @@ float Sensoray826::getLoadSensor(LoadSensor load_sensor) {
 }
 
 void Sensoray826::adcSetup() {
-	S826_AdcSlotConfigWrite(m_board, 0, 0, adc_t_settle, adc_gain); // measuring on slot 0
-	S826_AdcSlotlistWrite(m_board, 1, S826_BITWRITE); // enable slot 0
+	S826_AdcSlotConfigWrite(m_board, 0, adc_in_chan[0], adc_t_settle, adc_gain); // measuring on slot 0
+	S826_AdcSlotConfigWrite(m_board, 1, adc_in_chan[1], adc_t_settle, adc_gain); // measuring on slot 0
+	// S826_AdcSlotlistWrite(m_board, 1, S826_BITWRITE); // enable slot 0
+	S826_AdcSlotlistWrite(m_board, 0x0003, S826_BITWRITE); // enable slot 0 and 1
 	S826_AdcTrigModeWrite(m_board, 0); // trigger mode = continuous
 	S826_AdcEnableWrite(m_board, 1); // start adc conversions
 }

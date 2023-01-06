@@ -19,9 +19,9 @@
 class Sensoray826 {
 public:
 	// Constants
-	enum Motor {probe, tendon_r};
+	enum Motor {probe, tendon_r, tendon_l};
 	enum VoltLevel {low = S826_BITSET, high = S826_BITCLR};
-	enum LoadSensor {load_sensor_r};
+	enum LoadSensor {load_sensor_r, load_sensor_l};
 
 	static const uint max_pwm_freq;
 
@@ -31,7 +31,7 @@ public:
 
 	static const uint adc_gain;
 	static const int adc_t_settle;
-	static const uint adc_in_chan;
+	static const uint adc_in_chan[];
 	static const float sensor_range;
 
 	static const float tendon_f_max;

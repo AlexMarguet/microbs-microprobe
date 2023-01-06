@@ -48,10 +48,13 @@ private:
 
     QTimer* m_timer;
 
-    QPushButton* m_fwd_button;
-    QPushButton* m_bwd_button;
-    QPushButton* m_r_button;
-    QPushButton* m_l_button;
+    QPushButton* m_probe_fwd_button;
+    QPushButton* m_probe_bwd_button;
+    QPushButton* m_tendon_r_fwd_button;
+    QPushButton* m_tendon_r_bwd_button;
+    QPushButton* m_tendon_l_fwd_button;
+    QPushButton* m_tendon_l_bwd_button;
+    
     QPushButton* m_setup_button;
     QPushButton* m_insertion_button;
     QPushButton* m_calibration_button;
