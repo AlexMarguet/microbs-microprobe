@@ -23,7 +23,14 @@ public:
     void insertion();
     
 private:
+
+    void controlLoop();
+    
     Sensoray826 m_board;
+
+    float m_probe_speed = 0;
+    float m_tendon_u_speed = 0;
+    float m_tendon_d_speed = 0;
 
     float m_data_load[max_iter] = {};
 

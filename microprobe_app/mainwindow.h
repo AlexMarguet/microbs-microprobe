@@ -50,16 +50,17 @@ private:
 
     QPushButton* m_probe_fwd_button;
     QPushButton* m_probe_bwd_button;
-    QPushButton* m_tendon_r_fwd_button;
-    QPushButton* m_tendon_r_bwd_button;
-    QPushButton* m_tendon_l_fwd_button;
-    QPushButton* m_tendon_l_bwd_button;
+    QPushButton* m_tendon_u_fwd_button;
+    QPushButton* m_tendon_u_bwd_button;
+    QPushButton* m_tendon_d_fwd_button;
+    QPushButton* m_tendon_d_bwd_button;
     
     QPushButton* m_setup_button;
     QPushButton* m_insertion_button;
     QPushButton* m_calibration_button;
 
-    QLineEdit* m_load_sensor;
+    QLineEdit* m_load_sensor_u;
+    QLineEdit* m_load_sensor_d;
     
 };
 #endif // MAINWINDOW_H

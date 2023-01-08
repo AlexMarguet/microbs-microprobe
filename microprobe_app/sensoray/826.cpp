@@ -2,11 +2,16 @@
 
 using namespace std;
 
+const Sensoray826::VoltLevel Sensoray826::motor_direction[3][2] = {{low, high}, {low, high}, {low, high}}; //! TBD
+
 const uint Sensoray826::max_pwm_freq = 100;
 
-const uint Sensoray826::motor_pulse_dio[] = {1, 11, 10};	// board layout: {45, 25, 27}
-const uint Sensoray826::motor_dir_dio[] = {0, 12, 13};		// board layout: {47, 23, 21}
-const uint Sensoray826::motor_ctr_chan[] = {1, 3, 2};
+// const uint Sensoray826::motor_pulse_dio[] = {1, 11, 10};	// board layout: {45, 25, 27}
+// const uint Sensoray826::motor_dir_dio[] = {0, 12, 13};		// board layout: {47, 23, 21}
+// const uint Sensoray826::motor_ctr_chan[] = {1, 3, 2};
+const uint Sensoray826::motor_pulse_dio[] = {0, 1, 2};		// board layout: {47, 45, 43}
+const uint Sensoray826::motor_dir_dio[] = {10, 11, 12};		// board layout: {27, 25, 23}
+const uint Sensoray826::motor_ctr_chan[] = {0, 1, 2};
 
 // const uint Sensoray826::adc_gain = S826_ADC_GAIN_2;	// -5 <-> +5 [V]
 const uint Sensoray826::adc_gain = S826_ADC_GAIN_1;	// -10 <-> +10 [V]
@@ -23,12 +28,12 @@ const uint Sensoray826::step_per_tour = 200;
 
 const uint Sensoray826::probe_ustep = 256;
 const float Sensoray826::probe_radius = 5.;		// [mm]
-const uint Sensoray826::probe_v_manual = 3;		// [mm/s]
+const float Sensoray826::probe_v_manual = 3;	// [mm/s]
 const float Sensoray826::probe_pulse_ontime = (1 / (120 * probe_ustep * step_per_tour *((probe_v_manual / probe_radius) / M_PI)) * 10e7);
 
 const uint Sensoray826::tendon_ustep = 16;
 const float Sensoray826::tendon_radius = 2.5;	// [mm]
-const uint Sensoray826::tendon_v_manual = 2;	// [mm/s]
+const float Sensoray826::tendon_v_manual = 2;	// [mm/s]
 const float Sensoray826::tendon_pulse_ontime = (1 / (120 * tendon_ustep * step_per_tour *((tendon_v_manual / tendon_radius) / M_PI)) * 10e7);
 
 Sensoray826::Sensoray826() {
@@ -72,12 +77,12 @@ void Sensoray826::close() {
 
 void Sensoray826::motorsSetup() {
 	this->createPWM(motor_ctr_chan[probe], probe_pulse_ontime, probe_pulse_ontime);
-	this->createPWM(motor_ctr_chan[tendon_r], tendon_pulse_ontime, tendon_pulse_ontime);
-	this->createPWM(motor_ctr_chan[tendon_l], tendon_pulse_ontime, tendon_pulse_ontime);
+	this->createPWM(motor_ctr_chan[tendon_u], tendon_pulse_ontime, tendon_pulse_ontime);
+	this->createPWM(motor_ctr_chan[tendon_d], tendon_pulse_ontime, tendon_pulse_ontime);
 
 	this->startPWM(motor_ctr_chan[probe]);
-	this->startPWM(motor_ctr_chan[tendon_r]);
-	this->startPWM(motor_ctr_chan[tendon_l]);
+	this->startPWM(motor_ctr_chan[tendon_u]);
+	this->startPWM(motor_ctr_chan[tendon_d]);
 }
 
 void Sensoray826::motorOn(Motor motor) {
@@ -115,6 +120,7 @@ void Sensoray826::setMotorSpeed(Motor motor, uint speed) {
 	uint dio = motor_pulse_dio[motor];
 	this->setPWM(ctr, pulse_ontime, pulse_offtime);
 }
+
 
 void Sensoray826::dioIn() {
 	int errcode;
