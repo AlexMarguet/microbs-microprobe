@@ -18,5 +18,6 @@
 #include "mainwindow.h"
 #include "sensoray/826api.h"
 #include "sensoray/826.h"
+#include "controller.h"
 
 #endif // #ifndef MAIN_H

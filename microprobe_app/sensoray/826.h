@@ -22,7 +22,7 @@ public:
 	enum Motor {probe, tendon_u, tendon_d};
 	enum VoltLevel {low = S826_BITSET, high = S826_BITCLR};
 	enum LoadSensor {load_sensor_u, load_sensor_d};
-	enum Direction {reel, release};
+	enum Direction {release, reel, backward = 0, forward};
 
 	static const VoltLevel motor_direction[3][2];
 
@@ -43,15 +43,10 @@ public:
 	static const float deg_per_step;
 	static const uint step_per_tour;
 
-	static const uint probe_ustep;
-	static const float probe_radius;
-	static const float probe_v_manual;
-	static const float probe_pulse_ontime;
-
-	static const uint tendon_ustep;
-	static const float tendon_radius;
-	static const float tendon_v_manual;
-	static const float tendon_pulse_ontime;
+	static const uint ustep[];
+	static const float shaft_radius[];
+	static const float v_manual[];
+	static const float pulse_ontime_manual[];
 
 	Sensoray826();
 
@@ -68,6 +63,7 @@ public:
 	void motorOff(Motor motor);
 
 	void setMotorDirection(Motor motor, uint direction);
+	void setMotorDirection(Motor motor, Direction direction);
 
 	void setMotorSpeed(Motor motor, uint speed);
 
@@ -93,19 +89,21 @@ public:
 
 	void loadSensorCalibration(LoadSensor load_sensor);
 
+	void loadSensorOffsetCalibration(LoadSensor load_sensor);
+
 	float getLoadSensor(LoadSensor load_sensor);
 
 	void adcSetup();
 
-	int16_t adcIn();
+	int16_t adcIn(int slot);
 
 	void dacOut();
 
 private:
 	uint m_board = 0;
 
-	float m_load_sensor_offset = -27.7023;
-	float m_load_sensor_drift = 2.40586;
+	float m_load_sensor_offset[2] = {-110, -130}; // [mN]
+	float m_load_sensor_sensibility[2] = {100, 116.3}; // [mN/V]
 };
 
 #endif // #ifndef SENSORAY_826_H

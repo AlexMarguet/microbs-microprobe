@@ -2,7 +2,7 @@
 
 using namespace std;
 
-const Sensoray826::VoltLevel Sensoray826::motor_direction[3][2] = {{low, high}, {low, high}, {low, high}}; //! TBD
+const Sensoray826::VoltLevel Sensoray826::motor_direction[3][2] = {{low, high}, {high, low}, {high, low}};
 
 const uint Sensoray826::max_pwm_freq = 100;
 
@@ -14,10 +14,10 @@ const uint Sensoray826::motor_dir_dio[] = {10, 11, 12};		// board layout: {27, 2
 const uint Sensoray826::motor_ctr_chan[] = {0, 1, 2};
 
 // const uint Sensoray826::adc_gain = S826_ADC_GAIN_2;	// -5 <-> +5 [V]
-const uint Sensoray826::adc_gain = S826_ADC_GAIN_1;	// -10 <-> +10 [V]
+const uint Sensoray826::adc_gain = S826_ADC_GAIN_1;	// -10 <-> +10 [V] -- sensor range
 const int Sensoray826::adc_t_settle = -3;			// -3 or 3 ? Not clear, page 31/107
-const uint Sensoray826::adc_in_chan[] = {0, 1};		// board layout: {4, 6} on J1
-const float Sensoray826::sensor_range = 250.;
+const uint Sensoray826::adc_in_chan[] = {0, 1};		// board layout: {4, 6} on J1 {black, green}
+const float Sensoray826::sensor_range = 10.;
 
 const float Sensoray826::tendon_f_max = -12.;	// [mN]
 const float Sensoray826::tendon_f_min = -5.;	// [mN]
@@ -26,15 +26,12 @@ const float Sensoray826::tendon_f_min = -5.;	// [mN]
 const float Sensoray826::deg_per_step = 1.8;
 const uint Sensoray826::step_per_tour = 200;
 
-const uint Sensoray826::probe_ustep = 256;
-const float Sensoray826::probe_radius = 5.;		// [mm]
-const float Sensoray826::probe_v_manual = 3;	// [mm/s]
-const float Sensoray826::probe_pulse_ontime = (1 / (120 * probe_ustep * step_per_tour *((probe_v_manual / probe_radius) / M_PI)) * 10e7);
 
-const uint Sensoray826::tendon_ustep = 16;
-const float Sensoray826::tendon_radius = 2.5;	// [mm]
-const float Sensoray826::tendon_v_manual = 2;	// [mm/s]
-const float Sensoray826::tendon_pulse_ontime = (1 / (120 * tendon_ustep * step_per_tour *((tendon_v_manual / tendon_radius) / M_PI)) * 10e7);
+const uint Sensoray826::ustep[] = {256, 16};
+const float Sensoray826::shaft_radius[] = {5., 2.5};		// [mm]
+const float Sensoray826::v_manual[] = {1., 1.5};	// [mm/s]
+const float Sensoray826::pulse_ontime_manual[] = { (1 / (120 * ustep[0] * step_per_tour *((v_manual[0] / shaft_radius[0]) / M_PI)) * 10e7),
+													(1 / (120 * ustep[1] * step_per_tour *((v_manual[1] / shaft_radius[1]) / M_PI)) * 10e7) };
 
 Sensoray826::Sensoray826() {
 	this->open();
@@ -76,9 +73,9 @@ void Sensoray826::close() {
 }
 
 void Sensoray826::motorsSetup() {
-	this->createPWM(motor_ctr_chan[probe], probe_pulse_ontime, probe_pulse_ontime);
-	this->createPWM(motor_ctr_chan[tendon_u], tendon_pulse_ontime, tendon_pulse_ontime);
-	this->createPWM(motor_ctr_chan[tendon_d], tendon_pulse_ontime, tendon_pulse_ontime);
+	this->createPWM(motor_ctr_chan[probe], pulse_ontime_manual[0], pulse_ontime_manual[0]);
+	this->createPWM(motor_ctr_chan[tendon_u], pulse_ontime_manual[1], pulse_ontime_manual[1]);
+	this->createPWM(motor_ctr_chan[tendon_d], pulse_ontime_manual[1], pulse_ontime_manual[1]);
 
 	this->startPWM(motor_ctr_chan[probe]);
 	this->startPWM(motor_ctr_chan[tendon_u]);
@@ -104,6 +101,13 @@ void Sensoray826::setMotorDirection(Motor motor, uint direction) {
 	if (direction) {
 		level = high;
 	}
+
+	this->dioOut(dio, level);
+}
+
+void Sensoray826::setMotorDirection(Motor motor, Direction direction) {
+	uint dio = motor_dir_dio[motor];
+	VoltLevel level = Sensoray826::motor_direction[motor][direction];
 
 	this->dioOut(dio, level);
 }
@@ -233,43 +237,47 @@ void Sensoray826::dioSourceReset() {
 }
 
 void Sensoray826::loadSensorCalibration(LoadSensor load_sensor) {
-	float expected_weight_1 = -14.9, expected_weight_2 = -25.0, expected_weight_3 = -36.9;
+	// float expected_weight_1 = -14.9, expected_weight_2 = -25.0, expected_weight_3 = -36.9;
 
-	cout << "Remove weights from the sensor" << endl;
-	Sleep(10000);
-	m_load_sensor_offset = this->getLoadSensor(load_sensor);
-	cout << "Offset: " << m_load_sensor_offset << endl;
+	// cout << "Remove weights from the sensor" << endl;
+	// Sleep(10000);
+	// m_load_sensor_offset = this->getLoadSensor(load_sensor);
+	// cout << "Offset: " << m_load_sensor_offset << endl;
 
-	cout << "Put weight 1 on the sensor" << endl;
-	Sleep(10000);
-	float weight_1 = this->getLoadSensor(load_sensor);
-	cout << "Weight 1: " << weight_1 << endl;
+	// cout << "Put weight 1 on the sensor" << endl;
+	// Sleep(10000);
+	// float weight_1 = this->getLoadSensor(load_sensor);
+	// cout << "Weight 1: " << weight_1 << endl;
 
-	cout << "Put weight 2 on the sensor" << endl;
-	Sleep(10000);
-	float weight_2 = this->getLoadSensor(load_sensor);
-	cout << "Weight 2: " << weight_2 << endl;
+	// cout << "Put weight 2 on the sensor" << endl;
+	// Sleep(10000);
+	// float weight_2 = this->getLoadSensor(load_sensor);
+	// cout << "Weight 2: " << weight_2 << endl;
 
-	cout << "Put weight 3 on the sensor" << endl;
-	Sleep(10000);
-	float weight_3 = this->getLoadSensor(load_sensor);
-	cout << "Weight 3: " << weight_3 << endl;
+	// cout << "Put weight 3 on the sensor" << endl;
+	// Sleep(10000);
+	// float weight_3 = this->getLoadSensor(load_sensor);
+	// cout << "Weight 3: " << weight_3 << endl;
 
-	float drift = (weight_1/expected_weight_1 + weight_2/expected_weight_2 + weight_3/expected_weight_3) / 3;
-	cout << "Drift: " << drift << endl;
+	// float drift = (weight_1/expected_weight_1 + weight_2/expected_weight_2 + weight_3/expected_weight_3) / 3;
+	// cout << "Drift: " << drift << endl;
 
-	if (drift < 1.) {
-		cout << "Drift too low, corrected to 1." << endl;
-		drift = 1.;
-	}
-	m_load_sensor_drift = drift;
+	// if (drift < 1.) {
+	// 	cout << "Drift too low, corrected to 1." << endl;
+	// 	drift = 1.;
+	// }
+	// m_load_sensor_drift = drift;
 	
-	cout << "Corrected weights: " << weight_1/drift << " " <<weight_2/drift << " " << weight_3/drift << endl;
+	// cout << "Corrected weights: " << weight_1/drift << " " <<weight_2/drift << " " << weight_3/drift << endl;
+}
+
+void Sensoray826::loadSensorOffsetCalibration(LoadSensor load_sensor) {
+	m_load_sensor_offset[load_sensor] -= this->getLoadSensor(load_sensor);
 }
 
 
 float Sensoray826::getLoadSensor(LoadSensor load_sensor) {
-	float adc_val = (float)this->adcIn();
+	float adc_val = (float)this->adcIn(load_sensor);
 	int max_val;
 	if (adc_val < 0) {
 		max_val = 0x8000;
@@ -278,22 +286,26 @@ float Sensoray826::getLoadSensor(LoadSensor load_sensor) {
 	}
 	
 	float out = (adc_val * sensor_range) / max_val;
-	return (out - m_load_sensor_offset) / m_load_sensor_drift;
+
+	// return -(out - m_load_sensor_offset) / m_load_sensor_drift;
+	return -(out * m_load_sensor_sensibility[load_sensor]  - m_load_sensor_offset[load_sensor]);
 }
 
 void Sensoray826::adcSetup() {
 	S826_AdcSlotConfigWrite(m_board, 0, adc_in_chan[0], adc_t_settle, adc_gain); // measuring on slot 0
-	S826_AdcSlotConfigWrite(m_board, 1, adc_in_chan[1], adc_t_settle, adc_gain); // measuring on slot 0
+	S826_AdcSlotConfigWrite(m_board, 1, adc_in_chan[1], adc_t_settle, adc_gain); // measuring on slot 1
 	// S826_AdcSlotlistWrite(m_board, 1, S826_BITWRITE); // enable slot 0
-	S826_AdcSlotlistWrite(m_board, 0x0003, S826_BITWRITE); // enable slot 0 and 1
+	S826_AdcSlotlistWrite(m_board, 0xFFFF, S826_BITWRITE); // enable slot 0 and 1
 	S826_AdcTrigModeWrite(m_board, 0); // trigger mode = continuous
 	S826_AdcEnableWrite(m_board, 1); // start adc conversions
 }
 
-int16_t Sensoray826::adcIn() {
+int16_t Sensoray826::adcIn(int slot) {
 	int errcode;
 	int slotval[16]; // buffer must be sized for 16 slots
-	uint slotlist = 1; // only slot 0 is of interest in this example
+	// uint slotlist = 1; // only slot 0 is of interest in this example
+	// uint slotlist = 0x0003; // slot 0 and 1
+	uint slotlist = 0xFFFF; // all slots
 	errcode = S826_AdcRead(m_board, slotval, NULL, &slotlist, 100); // wait for IRQ
 
 	// if (errcode != S826_ERR_OK) {
@@ -304,7 +316,8 @@ int16_t Sensoray826::adcIn() {
 	// 	printf("%d\n", converted_data);
 	// }
 
-	return (int16_t)(slotval[0] & 0xFFFF);
+	// cout << "slot 0: " << (int16_t)(slotval[slot] & 0xFFFF) << "slot 1: " << (int16_t)(slotval[1] & 0xFFFF) << endl;
+	return (int16_t)(slotval[slot] & 0xFFFF);
 }
 
 void Sensoray826::dacOut() {
