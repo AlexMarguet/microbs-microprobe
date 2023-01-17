@@ -11,7 +11,6 @@ MainWindow::MainWindow(Sensoray826 board, Controller controller, QWidget *parent
 
     ui->setupUi(this);
 
-
     //Control box
     m_probe_fwd_button = findChild<QPushButton*>("pushButton_2");
     m_probe_bwd_button = findChild<QPushButton*>("pushButton");
@@ -19,7 +18,7 @@ MainWindow::MainWindow(Sensoray826 board, Controller controller, QWidget *parent
     m_tendon_u_reel_button = findChild<QPushButton*>("pushButton_4");
     m_tendon_d_release_button = findChild<QPushButton*>("pushButton_8");
     m_tendon_d_reel_button = findChild<QPushButton*>("pushButton_11");
-    m_mirrored_checkbox = findChild<QCheckBox*>("checkBox");
+    m_hold_checkbox = findChild<QCheckBox*>("checkBox");
 
     connect(m_probe_fwd_button, SIGNAL(pressed()), this, SLOT(activateMotor()));
     connect(m_probe_bwd_button, SIGNAL(pressed()), this, SLOT(activateMotor()));
@@ -35,11 +34,16 @@ MainWindow::MainWindow(Sensoray826 board, Controller controller, QWidget *parent
     connect(m_tendon_d_reel_button, SIGNAL(released()), this, SLOT(turnOffMotor()));
     connect(m_tendon_d_release_button, SIGNAL(released()), this, SLOT(turnOffMotor()));
 
+    connect(m_hold_checkbox, SIGNAL(stateChanged(int)), this, SLOT(hold()));
+
     //Parameters Box
     m_v_probe = findChild<QLineEdit*>("lineEdit_3");
     m_v_tendon_nom = findChild<QLineEdit*>("lineEdit_9");
     m_f_min = findChild<QLineEdit*>("lineEdit_10");
     m_x_probe_max = findChild<QLineEdit*>("lineEdit_11");
+    m_k_p = findChild<QLineEdit*>("lineEdit_8");
+    m_k_i = findChild<QLineEdit*>("lineEdit_12");
+    m_k_d = findChild<QLineEdit*>("lineEdit_13");
     m_parameters_apply_button = findChild<QPushButton*>("pushButton_18");
 
     connect(m_parameters_apply_button, SIGNAL(pressed()), this, SLOT(applyParameters()));
@@ -48,6 +52,9 @@ MainWindow::MainWindow(Sensoray826 board, Controller controller, QWidget *parent
     connect(m_v_tendon_nom, SIGNAL(textChanged(QString)), this, SLOT(applyParameters()));
     connect(m_f_min, SIGNAL(textChanged(QString)), this, SLOT(applyParameters()));
     connect(m_x_probe_max, SIGNAL(textChanged(QString)), this, SLOT(applyParameters()));
+    connect(m_k_p, SIGNAL(textChanged(QString)), this, SLOT(applyParameters()));
+    connect(m_k_i, SIGNAL(textChanged(QString)), this, SLOT(applyParameters()));
+    connect(m_k_d, SIGNAL(textChanged(QString)), this, SLOT(applyParameters()));
 
     //Insertion box
     m_start_button = findChild<QPushButton*>("pushButton_9");
@@ -86,12 +93,11 @@ MainWindow::MainWindow(Sensoray826 board, Controller controller, QWidget *parent
     m_timer->start(500);
 
     this->applyParameters();
-
 }
 
 MainWindow::~MainWindow()
 {
-    m_data_saver.closeCsv();
+    // m_data_saver.closeCsv();
     m_board.dioSourceReset();
     m_board.close();
     delete ui;
@@ -100,9 +106,8 @@ MainWindow::~MainWindow()
 void MainWindow::activateMotor() {
     QObject* sender_obj = sender();
     // QPushButton* button = qobject_cast<QPushButton*>(sender());
-    uint dir = 0;
     Sensoray826::Direction direction;
-    Sensoray826::Motor motor = Sensoray826::tendon_u;
+    Sensoray826::Motor motor;
 
     if (sender_obj == m_tendon_u_reel_button) {
         motor = Sensoray826::tendon_u;
@@ -126,17 +131,6 @@ void MainWindow::activateMotor() {
     
     m_board.setMotorDirection(motor, direction);
     m_board.motorOn(motor);
-
-    if (m_mirrored_checkbox->isChecked()) {
-        if (motor == Sensoray826::tendon_u) {
-            motor = Sensoray826::tendon_d;
-        } else if (motor == Sensoray826::tendon_d) {
-            motor = Sensoray826::tendon_u;
-        }
-        dir = 1-dir;
-        m_board.setMotorDirection(motor, dir);
-        m_board.motorOn(motor);        
-    }
 }
 
 void MainWindow::turnOffMotor() {
@@ -153,15 +147,6 @@ void MainWindow::turnOffMotor() {
     }
     
     m_board.motorOff(motor);
-
-    if (m_mirrored_checkbox->isChecked()) {
-        if (motor == Sensoray826::tendon_u) {
-            motor = Sensoray826::tendon_d;
-        } else if (motor == Sensoray826::tendon_d) {
-            motor = Sensoray826::tendon_u;
-        }
-        m_board.motorOff(motor);        
-    }
 }
 
 void MainWindow::applyParameters() {
@@ -172,11 +157,17 @@ void MainWindow::applyParameters() {
         float v_tendon_nom = m_v_tendon_nom->text().toFloat();
         float f_min = m_f_min->text().toFloat();
         float x_probe_max = m_x_probe_max->text().toFloat();
+        float k_p = m_k_p->text().toFloat();
+        float k_i = m_k_i->text().toFloat();
+        float k_d = m_k_d->text().toFloat();
         
         m_controller.setVProbe(v_probe);
         m_controller.setVTendonNom(v_tendon_nom);
         m_controller.setFMin(f_min);
         m_controller.setXProbeMax(x_probe_max);
+        m_controller.setKP(k_p);
+        m_controller.setKI(k_i);
+        m_controller.setKD(k_d);
 
         m_parameters_apply_button->setEnabled(false);
     } else if (sender_obj != nullptr) {
@@ -184,12 +175,25 @@ void MainWindow::applyParameters() {
     }
 }
 
+void MainWindow::hold() {
+    if (m_hold_checkbox.isChecked()) {
+        m_controller.startSetup();
+        m_control_loop_timer = new QTimer(this);
+        connect(m_control_loop_timer, SIGNAL(timeout()), this, SLOT(setup()));
+        m_control_loop_timer->start(100);
+    } else {
+        m_control_loop_timer->stop();
+    }
+}
+
 void MainWindow::fRefModif() {
     QObject* sender_obj = sender();
     if (sender_obj == m_f_ref_inc_button) {
-
+        m_f_ref += m_f_increment->text().toFloat();
+        m_controller.setFRef(m_f_ref);
     } else if (sender_obj == m_f_ref_inc_button) {
-
+        m_f_ref -= m_f_increment->text().toFloat();
+        m_controller.setFRef(m_f_ref);
     }
 }
 

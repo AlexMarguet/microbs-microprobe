@@ -12,6 +12,22 @@ void Controller::startSetup() {
     m_f_d_ref = m_f_min;
 }
 
+void Controller::start() {
+    if (m_v_probe == 0.) {
+        m_max_loops = 10;
+    } else {
+        m_max_loops = (m_x_probe_max/m_v_probe) * 10;
+    }
+    m_board.setMotorDirection(Sensoray826::probe, Sensoray826::forward);
+    m_board.motorOn(Sensoray826::probe);
+}
+
+void Controller::stop() {
+    m_board.motorOff(Sensoray826::probe);
+    m_board.motorOff(Sensoray826::tendon_u);
+    m_board.motorOff(Sensoray826::tendon_d);
+}
+
 bool Controller::setup() {
     static int k = 0;
 
@@ -54,47 +70,12 @@ bool Controller::setup() {
     return false;
 }
 
-void Controller::insertion() {
-    float f = 0;
-    float epsilon = 1.;
-    float f_data[max_iter] = {};
-    int k = 0;
-
-    int forward = 0, backward = 1;
-
-    // m_board.MotorOn(Sensoray826::probe);
-
-    while(f > Sensoray826::tendon_f_max && k < 1000) {
-        f = m_board.getLoadSensor(Sensoray826::load_sensor_u);
-        f_data[k] = f;
-        k++;
-
-        if (f >= Sensoray826::tendon_f_min + epsilon) {
-            m_board.setMotorDirection(Sensoray826::tendon_u, forward);
-            m_board.motorOn(Sensoray826::tendon_u);
-        } else if (f <= Sensoray826::tendon_f_min - epsilon) {
-            m_board.setMotorDirection(Sensoray826::tendon_u, backward);
-            m_board.motorOn(Sensoray826::tendon_u);
-        } else {
-            m_board.motorOff(Sensoray826::tendon_u);
-        }
-        Sleep(20);
-        cout << "loop: " << k << endl;
-    }
-
-    m_board.motorOff(Sensoray826::probe);
-    m_board.motorOff(Sensoray826::tendon_u);
-    // m_board.MotorOff(tendon_l);
-
-    DataSaver data_saver;
-    data_saver.createCsv("experiment_insertion.csv");
-    data_saver.writeCsv(k, f_data);
-    data_saver.closeCsv();
-}
+// DataSaver data_saver;
+//     data_saver.createCsv("experiment_insertion.csv");
+//     data_saver.writeCsv(k, f_data);
+//     data_saver.closeCsv();
 
 bool Controller::controlLoop() {
-    static int k = 0;
-
     float f = 0., epsilon = 5.;
 
 
@@ -120,51 +101,17 @@ bool Controller::controlLoop() {
         m_board.motorOff(Sensoray826::tendon_d);
     }
 
-    k++;
+    m_loop_iter++;
 
-    if(k > m_max_loops) {
-        k = 0;
-        m_board.motorOff(Sensoray826::probe);
+    if(m_loop_iter > m_max_loops) {
+        m_loop_iter = 0;
+        this->stop();
         return true;
     }
     return false;
-
-    // float v_fwd, angle;
-    // if (mouse) {
-    //     get3dMousePosition(&v_fwd, &angle);
-    // }  
-    // if (gui) {
-    //     getGuiTrajectory(&v_fwd, &angle);
-    // }
-
-    // m_probe_speed = v_fwd;
-    // float differential_load = angleToMotorSpeed(angle);
-    // m_load_u_ref = base_load + differential_load;
-    // m_load_d_ref = base_load - differential_load;
-
-    // load_u, load_d = m_board.getLoadSensor(both);
-
-    // v_motor = pidCalc(load, ref);
-    // m_board.setMotorSpeed(v_motor);
-
 }
 
-void Controller::start() {
-    if (m_v_probe == 0.) {
-        m_max_loops = 10;
-    } else {
-        m_max_loops = (m_x_probe_max/m_v_probe) * 10;
-    }
-    m_board.setMotorDirection(Sensoray826::probe, Sensoray826::forward);
-    m_board.motorOn(Sensoray826::probe);
-}
-
-void Controller::stop() {
-    m_board.motorOff(Sensoray826::probe);
-    m_board.motorOff(Sensoray826::tendon_u);
-    m_board.motorOff(Sensoray826::tendon_d);
-}
-
+//-------------GET-SET
 void Controller::setVProbe(float v_probe) {
     m_v_probe = v_probe;
 }
@@ -192,6 +139,18 @@ void Controller::setFRef(float f_ref) {
         m_f_u_ref = m_f_min;
         m_f_d_ref = m_f_min;
     }
+}
+
+void Controller::setKP(float k_p) {
+    m_k_p = k_p;
+}
+
+void Controller::setKI(float k_i) {
+    m_k_i = k_i;
+}
+
+void Controller::setKD(float k_d) {
+    m_k_d = k_d;
 }
 
 float Controller::getFURef() {

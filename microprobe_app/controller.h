@@ -14,15 +14,11 @@
 
 class Controller {
 public:
-    static const uint max_iter = 1000;
-
     Controller(Sensoray826 board);
 
     void startSetup();
     
     bool setup();
-
-    void insertion();
 
     bool controlLoop();
 
@@ -35,6 +31,9 @@ public:
     void setXProbeMax(float x_probe_max);
     void setFMin(float f_min);
     void setFRef(float f_ref);
+    void setKP(float k_p);
+    void setKI(float k_i);
+    void setKD(float k_d);
 
     float getFURef();
     float getFDRef();
@@ -55,7 +54,11 @@ private:
     float m_v_tendon_u = 0.;
     float m_v_tendon_d = 0.;
 
-    float m_data_load[max_iter] = {};
+    uint m_loop_iter = 0;
+
+    float m_k_p;
+    float m_k_i;
+    float m_k_d;
 
 };
 

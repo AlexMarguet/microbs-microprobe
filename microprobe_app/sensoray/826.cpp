@@ -4,11 +4,8 @@ using namespace std;
 
 const Sensoray826::VoltLevel Sensoray826::motor_direction[3][2] = {{low, high}, {high, low}, {high, low}};
 
-const uint Sensoray826::max_pwm_freq = 100;
+const uint Sensoray826::min_pulse_ontime = 0; //! TBD
 
-// const uint Sensoray826::motor_pulse_dio[] = {1, 11, 10};	// board layout: {45, 25, 27}
-// const uint Sensoray826::motor_dir_dio[] = {0, 12, 13};		// board layout: {47, 23, 21}
-// const uint Sensoray826::motor_ctr_chan[] = {1, 3, 2};
 const uint Sensoray826::motor_pulse_dio[] = {0, 1, 2};		// board layout: {47, 45, 43}
 const uint Sensoray826::motor_dir_dio[] = {10, 11, 12};		// board layout: {27, 25, 23}
 const uint Sensoray826::motor_ctr_chan[] = {0, 1, 2};
@@ -22,16 +19,16 @@ const float Sensoray826::sensor_range = 10.;
 const float Sensoray826::tendon_f_max = -12.;	// [mN]
 const float Sensoray826::tendon_f_min = -5.;	// [mN]
 
-
 const float Sensoray826::deg_per_step = 1.8;
+const float Sensoray826::rad_per_step = 0.01 * M_PI;
 const uint Sensoray826::step_per_tour = 200;
 
-
-const uint Sensoray826::ustep[] = {256, 16};
-const float Sensoray826::shaft_radius[] = {5., 2.5};		// [mm]
-const float Sensoray826::v_manual[] = {1., 1.5};	// [mm/s]
+const uint Sensoray826::ustep[] = {256, 16, 16};
+const float Sensoray826::shaft_radius[] = {5., 2.5, 2.5};	// [mm]
+const float Sensoray826::v_manual[] = {1., 1.5, 1.5};		// [mm/s]
 const float Sensoray826::pulse_ontime_manual[] = { (1 / (120 * ustep[0] * step_per_tour *((v_manual[0] / shaft_radius[0]) / M_PI)) * 10e7),
-													(1 / (120 * ustep[1] * step_per_tour *((v_manual[1] / shaft_radius[1]) / M_PI)) * 10e7) };
+													(1 / (120 * ustep[1] * step_per_tour *((v_manual[1] / shaft_radius[1]) / M_PI)) * 10e7),
+													(1 / (120 * ustep[2] * step_per_tour *((v_manual[2] / shaft_radius[2]) / M_PI)) * 10e7) };
 
 Sensoray826::Sensoray826() {
 	this->open();
@@ -73,9 +70,9 @@ void Sensoray826::close() {
 }
 
 void Sensoray826::motorsSetup() {
-	this->createPWM(motor_ctr_chan[probe], pulse_ontime_manual[0], pulse_ontime_manual[0]);
-	this->createPWM(motor_ctr_chan[tendon_u], pulse_ontime_manual[1], pulse_ontime_manual[1]);
-	this->createPWM(motor_ctr_chan[tendon_d], pulse_ontime_manual[1], pulse_ontime_manual[1]);
+	this->createPWM(motor_ctr_chan[probe], pulse_ontime_manual[probe], pulse_ontime_manual[probe]);
+	this->createPWM(motor_ctr_chan[tendon_u], pulse_ontime_manual[tendon_u], pulse_ontime_manual[tendon_u]);
+	this->createPWM(motor_ctr_chan[tendon_d], pulse_ontime_manual[tendon_d], pulse_ontime_manual[tendon_d]);
 
 	this->startPWM(motor_ctr_chan[probe]);
 	this->startPWM(motor_ctr_chan[tendon_u]);
@@ -112,19 +109,33 @@ void Sensoray826::setMotorDirection(Motor motor, Direction direction) {
 	this->dioOut(dio, level);
 }
 
-void Sensoray826::setMotorSpeed(Motor motor, uint speed) {
-	float period = 1/ (speed * step_per_tour);
-	uint pulse_ontime, pulse_offtime;
-	if (period >= MIN_ALLOWED_PWM_T * 2) {
+// void Sensoray826::setMotorSpeed(Motor motor, uint speed) {
+// 	float period = 1/ (speed * step_per_tour);
+// 	uint pulse_ontime, pulse_offtime;
+// 	if (period >= MIN_ALLOWED_PWM_T * 2) {
+// 		pulse_ontime = (uint) period/2;
+// 		pulse_offtime = (uint) period/2;
+// 	}
+
+// 	uint ctr = motor_ctr_chan[motor];
+// 	uint dio = motor_pulse_dio[motor];
+// 	this->setPWM(ctr, pulse_ontime, pulse_offtime);
+// }
+
+void Sensoray826::setMotorSpeed(Motor motor, float speed) {
+	float period = (shaft_radius[motor] * rad_per_step) / (speed * ustep[motor]);
+
+	uint pulse_ontime, pulse_offtime; // us
+	if (period >= min_pulse_ontime * 2) {
 		pulse_ontime = (uint) period/2;
 		pulse_offtime = (uint) period/2;
 	}
+	//! Also block for uint overflow at low speed
 
 	uint ctr = motor_ctr_chan[motor];
-	uint dio = motor_pulse_dio[motor];
+
 	this->setPWM(ctr, pulse_ontime, pulse_offtime);
 }
-
 
 void Sensoray826::dioIn() {
 	int errcode;
@@ -146,9 +157,6 @@ void Sensoray826::dioOut(uint dio, VoltLevel level) {
 	}
 		
 	data[dio > 23] |= (1 << (dio % 24));
-
-	cout << hex << showbase << data[0] << dec << endl;
-	
 
 	errcode = S826_DioOutputWrite(m_board, data, level);
 	// printf("dioOut error code: %d\n", errcode);

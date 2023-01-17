@@ -39,6 +39,8 @@ private slots:
 
     void applyParameters();
 
+    void hold();
+
     void insertion();
 
     void fRefModif();
@@ -67,13 +69,16 @@ private:
     QPushButton* m_tendon_u_release_button;
     QPushButton* m_tendon_d_reel_button;
     QPushButton* m_tendon_d_release_button;
-    QCheckBox* m_mirrored_checkbox;
+    QCheckBox* m_hold_checkbox;
 
     //Parameters Box
     QLineEdit* m_v_probe;
     QLineEdit* m_v_tendon_nom;
     QLineEdit* m_f_min;
     QLineEdit* m_x_probe_max;
+    QLineEdit* m_k_p;
+    QLineEdit* m_k_i;
+    QLineEdit* m_k_d;
     QPushButton* m_parameters_apply_button;
 
     //Sensors box
@@ -90,6 +95,8 @@ private:
     QPushButton* m_f_ref_inc_button;
     QPushButton* m_f_ref_dec_button;
     QLineEdit* m_f_increment;
+
+    float m_f_ref = 0;
 
     
     

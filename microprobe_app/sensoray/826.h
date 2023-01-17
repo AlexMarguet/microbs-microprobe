@@ -26,7 +26,7 @@ public:
 
 	static const VoltLevel motor_direction[3][2];
 
-	static const uint max_pwm_freq;
+	static const uint min_pulse_ontime;
 
 	static const uint motor_pulse_dio[];
 	static const uint motor_dir_dio[];
@@ -41,6 +41,7 @@ public:
 	static const float tendon_f_min;
 
 	static const float deg_per_step;
+	static const float rad_per_step;
 	static const uint step_per_tour;
 
 	static const uint ustep[];
@@ -65,7 +66,7 @@ public:
 	void setMotorDirection(Motor motor, uint direction);
 	void setMotorDirection(Motor motor, Direction direction);
 
-	void setMotorSpeed(Motor motor, uint speed);
+	void setMotorSpeed(Motor motor, float speed);
 
 	void dioIn();
 
