@@ -430,9 +430,9 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>120</y>
-       <width>91</width>
-       <height>31</height>
+       <y>90</y>
+       <width>101</width>
+       <height>81</height>
       </rect>
      </property>
      <property name="text">
@@ -445,7 +445,7 @@
        <x>120</x>
        <y>30</y>
        <width>121</width>
-       <height>51</height>
+       <height>71</height>
       </rect>
      </property>
      <property name="text">
@@ -456,9 +456,9 @@
      <property name="geometry">
       <rect>
        <x>120</x>
-       <y>210</y>
+       <y>180</y>
        <width>121</width>
-       <height>51</height>
+       <height>71</height>
       </rect>
      </property>
      <property name="text">
@@ -473,6 +473,9 @@
        <width>113</width>
        <height>26</height>
       </rect>
+     </property>
+     <property name="text">
+      <string>0</string>
      </property>
     </widget>
     <widget class="QLabel" name="label_7">
@@ -492,19 +495,19 @@
      <property name="geometry">
       <rect>
        <x>160</x>
-       <y>130</y>
-       <width>113</width>
+       <y>140</y>
+       <width>51</width>
        <height>26</height>
       </rect>
      </property>
      <property name="text">
-      <string>10</string>
+      <string>50</string>
      </property>
     </widget>
     <widget class="QLabel" name="label_8">
      <property name="geometry">
       <rect>
-       <x>160</x>
+       <x>130</x>
        <y>110</y>
        <width>121</width>
        <height>21</height>
@@ -536,6 +539,19 @@
       <enum>Qt::Vertical</enum>
      </property>
     </widget>
+    <widget class="QCheckBox" name="checkBox_2">
+     <property name="geometry">
+      <rect>
+       <x>350</x>
+       <y>20</y>
+       <width>91</width>
+       <height>24</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>PID</string>
+     </property>
+    </widget>
    </widget>
    <widget class="QGroupBox" name="groupBox_5">
     <property name="geometry">
@@ -559,7 +575,7 @@
       </rect>
      </property>
      <property name="text">
-      <string>0.5</string>
+      <string>1.0</string>
      </property>
     </widget>
     <widget class="QLabel" name="label_6">
@@ -598,7 +614,7 @@
       </rect>
      </property>
      <property name="text">
-      <string>Vt [mm/s]</string>
+      <string>Vt rel [mm/s]</string>
      </property>
     </widget>
     <widget class="QLineEdit" name="lineEdit_10">
@@ -708,7 +724,7 @@
       </rect>
      </property>
      <property name="text">
-      <string>0.1</string>
+      <string>0.</string>
      </property>
     </widget>
     <widget class="QLabel" name="label_15">
@@ -734,7 +750,7 @@
       </rect>
      </property>
      <property name="text">
-      <string>0.1</string>
+      <string>0.</string>
      </property>
     </widget>
     <widget class="QLabel" name="label_16">
@@ -750,19 +766,104 @@
       <string>Kd</string>
      </property>
     </widget>
+    <widget class="QDoubleSpinBox" name="doubleSpinBox">
+     <property name="geometry">
+      <rect>
+       <x>200</x>
+       <y>200</y>
+       <width>62</width>
+       <height>26</height>
+      </rect>
+     </property>
+    </widget>
+    <widget class="QLineEdit" name="lineEdit_15">
+     <property name="geometry">
+      <rect>
+       <x>242</x>
+       <y>160</y>
+       <width>41</width>
+       <height>26</height>
+      </rect>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_19">
+     <property name="geometry">
+      <rect>
+       <x>160</x>
+       <y>160</y>
+       <width>101</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>F at V max</string>
+     </property>
+    </widget>
    </widget>
    <widget class="QGroupBox" name="groupBox_6">
     <property name="geometry">
      <rect>
-      <x>820</x>
-      <y>260</y>
-      <width>120</width>
-      <height>80</height>
+      <x>629</x>
+      <y>270</y>
+      <width>311</width>
+      <height>131</height>
      </rect>
     </property>
     <property name="title">
-     <string>Save plot</string>
+     <string>Save data</string>
     </property>
+    <widget class="QLineEdit" name="lineEdit_14">
+     <property name="geometry">
+      <rect>
+       <x>110</x>
+       <y>30</y>
+       <width>113</width>
+       <height>26</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>example</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_17">
+     <property name="geometry">
+      <rect>
+       <x>20</x>
+       <y>30</y>
+       <width>71</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>File name</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_18">
+     <property name="geometry">
+      <rect>
+       <x>230</x>
+       <y>30</y>
+       <width>63</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>.tsv</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="pushButton_19">
+     <property name="geometry">
+      <rect>
+       <x>20</x>
+       <y>70</y>
+       <width>93</width>
+       <height>29</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Record</string>
+     </property>
+    </widget>
    </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
@@ -771,7 +872,7 @@
      <x>0</x>
      <y>0</y>
      <width>1155</width>
-     <height>21</height>
+     <height>26</height>
     </rect>
    </property>
   </widget>

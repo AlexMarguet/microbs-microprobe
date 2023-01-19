@@ -123,7 +123,18 @@ void Sensoray826::setMotorDirection(Motor motor, Direction direction) {
 // }
 
 void Sensoray826::setMotorSpeed(Motor motor, float speed) {
-	float period = (shaft_radius[motor] * rad_per_step) / (speed * ustep[motor]);
+	if (speed == 0.) {
+		return;
+	}
+	if (speed <= 0) {
+		speed = -speed;
+	}
+
+	float period =  1000000 * (shaft_radius[motor] * rad_per_step) / (speed * ustep[motor]); // [s] to [us]
+
+	if (period >= UINT_MAX) {
+		period = UINT_MAX; // limit reached at ~1e-7 [mm/s]
+	}
 
 	uint pulse_ontime, pulse_offtime; // us
 	if (period >= min_pulse_ontime * 2) {
@@ -134,6 +145,7 @@ void Sensoray826::setMotorSpeed(Motor motor, float speed) {
 
 	uint ctr = motor_ctr_chan[motor];
 
+	// cout << "speed =" << speed << " and period =" << period << endl;
 	this->setPWM(ctr, pulse_ontime, pulse_offtime);
 }
 

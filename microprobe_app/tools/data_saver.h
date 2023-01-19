@@ -9,17 +9,17 @@ using namespace std;
 
 class DataSaver {
 public:
-	static const char separator = ',';
+	static const char separator = '\t';
 	
 	DataSaver();
 
-	void createCsv(string name);
+	void createTsv(string name);
 
-	void writeCsv(string content);
+	void writeTsv(string content);
 
-	void writeCsv(int size, float* load);
+	void writeTsv(int size, float* load);
 
-	void closeCsv();
+	void closeTsv();
 
 private:
 	fstream m_fout;

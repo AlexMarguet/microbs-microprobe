@@ -8,6 +8,7 @@
 #endif
 
 #include <iostream>
+#include <chrono>
 
 #include <QMainWindow>
 #include <QLabel>
@@ -39,6 +40,8 @@ private slots:
 
     void applyParameters();
 
+    void holdCheckbox();
+
     void hold();
 
     void insertion();
@@ -49,9 +52,13 @@ private slots:
 
     void controlLoop();
 
+    void controlLoopPID();
+
     void launchScript();
 
     void updateValue();
+
+    void dataRecord();
 
 private:
     Ui::MainWindow *ui;
@@ -95,11 +102,17 @@ private:
     QPushButton* m_f_ref_inc_button;
     QPushButton* m_f_ref_dec_button;
     QLineEdit* m_f_increment;
+    QLineEdit* m_f_ref_lineedit;
+    QCheckBox* m_pid_checkbox;
 
     float m_f_ref = 0;
+    chrono::time_point<chrono::steady_clock> m_last_start_time;
+    chrono::time_point<chrono::steady_clock> m_insertion_start_time;    
+    
+    //Datasave box
+    QPushButton* m_record_button;
+    QLineEdit* m_file_name_lineedit;
 
-    
-    
     //Scripts box
     QPushButton* m_setup_button;
     QPushButton* m_insertion_button;

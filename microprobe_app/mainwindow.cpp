@@ -1,6 +1,8 @@
 #include "mainwindow.h"
 #include "./ui_mainwindow.h"
 
+using namespace std;
+
 MainWindow::MainWindow(Sensoray826 board, Controller controller, QWidget *parent)
     : m_board(board),
     m_controller(controller),
@@ -34,7 +36,7 @@ MainWindow::MainWindow(Sensoray826 board, Controller controller, QWidget *parent
     connect(m_tendon_d_reel_button, SIGNAL(released()), this, SLOT(turnOffMotor()));
     connect(m_tendon_d_release_button, SIGNAL(released()), this, SLOT(turnOffMotor()));
 
-    connect(m_hold_checkbox, SIGNAL(stateChanged(int)), this, SLOT(hold()));
+    connect(m_hold_checkbox, SIGNAL(stateChanged(int)), this, SLOT(holdCheckbox()));
 
     //Parameters Box
     m_v_probe = findChild<QLineEdit*>("lineEdit_3");
@@ -59,9 +61,16 @@ MainWindow::MainWindow(Sensoray826 board, Controller controller, QWidget *parent
     //Insertion box
     m_start_button = findChild<QPushButton*>("pushButton_9");
     m_stop_button = findChild<QPushButton*>("pushButton_10");
+    m_f_ref_inc_button = findChild<QPushButton*>("pushButton_14");
+    m_f_ref_dec_button = findChild<QPushButton*>("pushButton_15");
+    m_f_increment = findChild<QLineEdit*>("lineEdit_7");
+    m_f_ref_lineedit = findChild<QLineEdit*>("lineEdit_4");
+    m_pid_checkbox = findChild<QCheckBox*>("checkBox_2");
 
     connect(m_start_button, SIGNAL(pressed()), this, SLOT(insertion()));
     connect(m_stop_button, SIGNAL(pressed()), this, SLOT(insertion()));
+    connect(m_f_ref_inc_button, SIGNAL(pressed()), this, SLOT(fRefModif()));
+    connect(m_f_ref_dec_button, SIGNAL(pressed()), this, SLOT(fRefModif()));
 
     //Scripts box
     m_setup_button = findChild<QPushButton*>("pushButton_5");
@@ -82,6 +91,13 @@ MainWindow::MainWindow(Sensoray826 board, Controller controller, QWidget *parent
 
     connect(m_load_sensor_u_to_zero_button, SIGNAL(pressed()), this, SLOT(launchScript()));
     connect(m_load_sensor_d_to_zero_button, SIGNAL(pressed()), this, SLOT(launchScript()));
+
+    //Datasave box
+    m_record_button = findChild<QPushButton*>("pushButton_19");
+    m_file_name_lineedit = findChild<QLineEdit*>("lineEdit_14");
+
+    
+    connect(m_record_button, SIGNAL(pressed()), this, SLOT(dataRecord()));
 
 
     m_dio_reset_button = findChild<QPushButton*>("pushButton_12");
@@ -151,8 +167,7 @@ void MainWindow::turnOffMotor() {
 
 void MainWindow::applyParameters() {
     QObject* sender_obj = sender();
-    if (sender_obj == m_parameters_apply_button) {
-
+    if (sender_obj == m_parameters_apply_button || sender_obj == nullptr) {
         float v_probe = m_v_probe->text().toFloat();
         float v_tendon_nom = m_v_tendon_nom->text().toFloat();
         float f_min = m_f_min->text().toFloat();
@@ -175,15 +190,19 @@ void MainWindow::applyParameters() {
     }
 }
 
-void MainWindow::hold() {
-    if (m_hold_checkbox.isChecked()) {
+void MainWindow::holdCheckbox() {
+    if (m_hold_checkbox->isChecked()) {
         m_controller.startSetup();
         m_control_loop_timer = new QTimer(this);
-        connect(m_control_loop_timer, SIGNAL(timeout()), this, SLOT(setup()));
+        connect(m_control_loop_timer, SIGNAL(timeout()), this, SLOT(hold()));
         m_control_loop_timer->start(100);
     } else {
         m_control_loop_timer->stop();
     }
+}
+
+void MainWindow::hold() {
+    this->m_controller.hold();
 }
 
 void MainWindow::fRefModif() {
@@ -191,10 +210,11 @@ void MainWindow::fRefModif() {
     if (sender_obj == m_f_ref_inc_button) {
         m_f_ref += m_f_increment->text().toFloat();
         m_controller.setFRef(m_f_ref);
-    } else if (sender_obj == m_f_ref_inc_button) {
+    } else if (sender_obj == m_f_ref_dec_button) {
         m_f_ref -= m_f_increment->text().toFloat();
         m_controller.setFRef(m_f_ref);
     }
+    m_f_ref_lineedit->setText(QString::number(m_f_ref));
 }
 
 void MainWindow::insertion() {
@@ -202,10 +222,15 @@ void MainWindow::insertion() {
     // QPushButton* button = qobject_cast<QPushButton*>(sender());
     if (sender_obj == m_start_button) {
         m_control_loop_timer = new QTimer(this);
-        connect(m_control_loop_timer, SIGNAL(timeout()), this, SLOT(controlLoop()));
-
-        m_controller.start();
-        m_control_loop_timer->start(100);
+        if (m_pid_checkbox->isChecked()) {
+            connect(m_control_loop_timer, SIGNAL(timeout()), this, SLOT(controlLoopPID()));
+        } else {
+            connect(m_control_loop_timer, SIGNAL(timeout()), this, SLOT(controlLoop()));
+        }
+        m_controller.start(10);
+        m_insertion_start_time = chrono::steady_clock::now();
+        m_last_start_time = m_insertion_start_time;
+        m_control_loop_timer->start(90);
     } else if (sender_obj == m_stop_button) {
         m_controller.stop();
         m_control_loop_timer->stop();
@@ -218,11 +243,34 @@ void MainWindow::setup() {
     }
 }
 
-void MainWindow::controlLoop() {
+void MainWindow::controlLoop() { // Mean duration: ~0.2 [ms] ; Mean loop cycle: ~110 [ms]
+    auto start = chrono::steady_clock::now();
+    chrono::duration<double, milli> elapsed {start - m_last_start_time};
+    // cout << "Loop period: " << elapsed.count() << " ms" << endl;
+
     if(this->m_controller.controlLoop()) {
         m_controller.stop();
         m_control_loop_timer->stop();
+        chrono::duration<double, milli> elapsed {chrono::steady_clock::now() - m_insertion_start_time};
+        cout << "Total insertion duration: " << elapsed.count() << " ms" << endl;
     }
+    
+    m_last_start_time = start;
+}
+
+void MainWindow::controlLoopPID() { // Mean duration: ~0.2 [ms] ; Mean loop cycle: ~110 [ms]
+    auto start = chrono::steady_clock::now();
+    chrono::duration<double, milli> elapsed {start - m_last_start_time};
+    // cout << "Loop period: " << elapsed.count() << " ms" << endl;
+
+    if(this->m_controller.controlLoopPID()) {
+        m_controller.stop();
+        m_control_loop_timer->stop();
+        chrono::duration<double, milli> elapsed {chrono::steady_clock::now() - m_insertion_start_time};
+        cout << "Total insertion duration: " << elapsed.count() << " ms" << endl;
+    }
+    
+    m_last_start_time = start;
 }
 
 
@@ -230,19 +278,16 @@ void MainWindow::launchScript() {
     QObject* sender_obj = sender();
 
     if (sender_obj == m_setup_button) {
-        std::cout << "setup" << std::endl;
+        cout << "setup" << endl;
         m_controller.startSetup();
         m_control_loop_timer = new QTimer(this);
         connect(m_control_loop_timer, SIGNAL(timeout()), this, SLOT(setup()));
         m_control_loop_timer->start(100);
     } else if (sender_obj == m_calibration_button) {
-        std::cout << "calibration" << std::endl;
+        cout << "calibration" << endl;
         this->m_board.loadSensorCalibration(Sensoray826::load_sensor_u);
-    } else if (sender_obj == m_insertion_button) {
-        std::cout << "insertion" << std::endl;
-        this->m_controller.insertion();
     } else if (sender_obj == m_dio_reset_button) {
-        std::cout << "dio reset" << std::endl;
+        cout << "dio reset" << endl;
         this->m_board.dioSourceReset();
     } else if (sender_obj == m_load_sensor_u_to_zero_button) {
         this->m_board.loadSensorOffsetCalibration(Sensoray826::load_sensor_u);
@@ -257,4 +302,13 @@ void MainWindow::updateValue() {
 
     m_f_u_ref->setText(QString::number(m_controller.getFURef()));
     m_f_d_ref->setText(QString::number(m_controller.getFDRef()));  
+}
+
+void MainWindow::dataRecord() {
+    QObject* sender_obj = sender();
+
+    if (sender_obj == m_record_button) {
+        m_data_saver.createTsv(m_file_name_lineedit->text().toStdString());
+        m_data_saver.closeTsv();
+    }
 }
