@@ -9,22 +9,27 @@ using namespace std;
 
 class DataSaver {
 public:
-	static const char separator = '\t';
+	static const char separator;
 	
+	static const int header_size;
+
+	static const string header[];
+
 	DataSaver();
 
-	void createTsv(string name);
+	void createCsv(string name);
 
-	void writeTsv(string content);
+	void writeHeader();
 
-	void writeTsv(int size, float* load);
+	void writeCsv(string content);
 
-	void closeTsv();
+	void writeDataLine(float* data, int size);
+
+	void closeCsv();
 
 private:
-	fstream m_fout;
-
-	string m_name;
+	// fstream m_file_out;
+	string m_file_name;
 };
 
 #endif // TOOLS_DATA_SAVE_H

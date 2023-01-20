@@ -14,7 +14,7 @@
 
 class Controller {
 public:
-    Controller(Sensoray826 board);
+    Controller(Sensoray826 board, DataSaver& data_saver);
 
     void startSetup();
     
@@ -30,8 +30,8 @@ public:
 
     void stop();
 
-    void setVProbe(float v_probe);
-    void setVTendonNom(float v_tendon_nom);
+    void setVProbeNom(float v_probe_nom);
+    void setVTendonRelNom(float v_tendon_rel_nom);
     void setXProbeMax(float x_probe_max);
     void setFMin(float f_min);
     void setFRef(float f_ref);
@@ -45,6 +45,8 @@ public:
     
 private:
     Sensoray826 m_board;
+    
+    DataSaver& m_data_saver;
 
     float m_x_probe_max = 0.; // [mm]
     int m_max_loops = 0.;
@@ -56,8 +58,9 @@ private:
 
     float m_load[2] = {0, 0};
 
+    float m_v_probe_nom = 0.;
     float m_v_probe = 0.;
-    float m_v_tendon_nom = 0.;
+    float m_v_tendon_rel_nom = 0.;
     float m_v_tendon_u = 0.;
     float m_v_tendon_d = 0.;
 
@@ -70,12 +73,12 @@ private:
     float m_prev_error[2] = {0, 0};
 
     //Recorded data
-    vector<float> m_rec_time;
-    vector<float> m_rec_x_probe; // expected, not measured
-    vector<vector<float>> m_rec_load;
-    vector<vector<float>>  m_rec_f_ref;
-    vector<float> m_rec_v_probe;
-    vector<vector<float>>  m_rec_v_tendon;
+    // vector<float> m_rec_time;
+    // vector<float> m_rec_x_probe; // expected, not measured
+    // vector<vector<float>> m_rec_load;
+    // vector<vector<float>>  m_rec_f_ref;
+    // vector<float> m_rec_v_probe;
+    // vector<vector<float>>  m_rec_v_tendon;
 
 };
 

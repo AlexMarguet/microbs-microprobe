@@ -3,9 +3,10 @@
 
 using namespace std;
 
-MainWindow::MainWindow(Sensoray826 board, Controller controller, QWidget *parent)
+MainWindow::MainWindow(Sensoray826 board, Controller controller, DataSaver& data_saver, QWidget *parent)
     : m_board(board),
     m_controller(controller),
+    m_data_saver(data_saver),
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
@@ -39,8 +40,8 @@ MainWindow::MainWindow(Sensoray826 board, Controller controller, QWidget *parent
     connect(m_hold_checkbox, SIGNAL(stateChanged(int)), this, SLOT(holdCheckbox()));
 
     //Parameters Box
-    m_v_probe = findChild<QLineEdit*>("lineEdit_3");
-    m_v_tendon_nom = findChild<QLineEdit*>("lineEdit_9");
+    m_v_probe_nom = findChild<QLineEdit*>("lineEdit_3");
+    m_v_tendon_rel_nom = findChild<QLineEdit*>("lineEdit_9");
     m_f_min = findChild<QLineEdit*>("lineEdit_10");
     m_x_probe_max = findChild<QLineEdit*>("lineEdit_11");
     m_k_p = findChild<QLineEdit*>("lineEdit_8");
@@ -50,8 +51,8 @@ MainWindow::MainWindow(Sensoray826 board, Controller controller, QWidget *parent
 
     connect(m_parameters_apply_button, SIGNAL(pressed()), this, SLOT(applyParameters()));
 
-    connect(m_v_probe, SIGNAL(textChanged(QString)), this, SLOT(applyParameters()));
-    connect(m_v_tendon_nom, SIGNAL(textChanged(QString)), this, SLOT(applyParameters()));
+    connect(m_v_probe_nom, SIGNAL(textChanged(QString)), this, SLOT(applyParameters()));
+    connect(m_v_tendon_rel_nom, SIGNAL(textChanged(QString)), this, SLOT(applyParameters()));
     connect(m_f_min, SIGNAL(textChanged(QString)), this, SLOT(applyParameters()));
     connect(m_x_probe_max, SIGNAL(textChanged(QString)), this, SLOT(applyParameters()));
     connect(m_k_p, SIGNAL(textChanged(QString)), this, SLOT(applyParameters()));
@@ -95,10 +96,10 @@ MainWindow::MainWindow(Sensoray826 board, Controller controller, QWidget *parent
     //Datasave box
     m_record_button = findChild<QPushButton*>("pushButton_19");
     m_file_name_lineedit = findChild<QLineEdit*>("lineEdit_14");
+    m_save_button = findChild<QPushButton*>("pushButton_20");
 
-    
     connect(m_record_button, SIGNAL(pressed()), this, SLOT(dataRecord()));
-
+    connect(m_save_button, SIGNAL(pressed()), this, SLOT(dataRecord()));
 
     m_dio_reset_button = findChild<QPushButton*>("pushButton_12");
     connect(m_dio_reset_button, SIGNAL(pressed()), this, SLOT(launchScript()));
@@ -168,16 +169,16 @@ void MainWindow::turnOffMotor() {
 void MainWindow::applyParameters() {
     QObject* sender_obj = sender();
     if (sender_obj == m_parameters_apply_button || sender_obj == nullptr) {
-        float v_probe = m_v_probe->text().toFloat();
-        float v_tendon_nom = m_v_tendon_nom->text().toFloat();
+        float v_probe_nom = m_v_probe_nom->text().toFloat();
+        float v_tendon_rel_nom = m_v_tendon_rel_nom->text().toFloat();
         float f_min = m_f_min->text().toFloat();
         float x_probe_max = m_x_probe_max->text().toFloat();
         float k_p = m_k_p->text().toFloat();
         float k_i = m_k_i->text().toFloat();
         float k_d = m_k_d->text().toFloat();
         
-        m_controller.setVProbe(v_probe);
-        m_controller.setVTendonNom(v_tendon_nom);
+        m_controller.setVProbeNom(v_probe_nom);
+        m_controller.setVTendonRelNom(v_tendon_rel_nom);
         m_controller.setFMin(f_min);
         m_controller.setXProbeMax(x_probe_max);
         m_controller.setKP(k_p);
@@ -198,6 +199,7 @@ void MainWindow::holdCheckbox() {
         m_control_loop_timer->start(100);
     } else {
         m_control_loop_timer->stop();
+        m_controller.stop();
     }
 }
 
@@ -308,7 +310,8 @@ void MainWindow::dataRecord() {
     QObject* sender_obj = sender();
 
     if (sender_obj == m_record_button) {
-        m_data_saver.createTsv(m_file_name_lineedit->text().toStdString());
-        m_data_saver.closeTsv();
+        m_data_saver.createCsv(m_file_name_lineedit->text().toStdString());
+
+    } else if (sender_obj == m_save_button) {
     }
 }

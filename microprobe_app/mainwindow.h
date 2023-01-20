@@ -30,7 +30,7 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    MainWindow(Sensoray826 board, Controller controller, QWidget *parent = nullptr);
+    MainWindow(Sensoray826 board, Controller controller, DataSaver& data_saver, QWidget *parent = nullptr);
     ~MainWindow();
 
 private slots:
@@ -64,7 +64,7 @@ private:
     Ui::MainWindow *ui;
     Sensoray826 m_board;
     Controller m_controller;
-    DataSaver m_data_saver;
+    DataSaver& m_data_saver;
 
     QTimer* m_timer;
     QTimer* m_control_loop_timer;
@@ -79,8 +79,8 @@ private:
     QCheckBox* m_hold_checkbox;
 
     //Parameters Box
-    QLineEdit* m_v_probe;
-    QLineEdit* m_v_tendon_nom;
+    QLineEdit* m_v_probe_nom;
+    QLineEdit* m_v_tendon_rel_nom;
     QLineEdit* m_f_min;
     QLineEdit* m_x_probe_max;
     QLineEdit* m_k_p;
@@ -112,6 +112,7 @@ private:
     //Datasave box
     QPushButton* m_record_button;
     QLineEdit* m_file_name_lineedit;
+    QPushButton* m_save_button;
 
     //Scripts box
     QPushButton* m_setup_button;
