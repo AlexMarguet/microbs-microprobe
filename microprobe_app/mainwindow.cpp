@@ -62,6 +62,7 @@ MainWindow::MainWindow(Sensoray826 board, Controller controller, DataSaver& data
     //Insertion box
     m_start_button = findChild<QPushButton*>("pushButton_9");
     m_stop_button = findChild<QPushButton*>("pushButton_10");
+    m_reel_back_button = findChild<QPushButton*>("pushButton_21");
     m_f_ref_inc_button = findChild<QPushButton*>("pushButton_14");
     m_f_ref_dec_button = findChild<QPushButton*>("pushButton_15");
     m_f_increment = findChild<QLineEdit*>("lineEdit_7");
@@ -70,6 +71,7 @@ MainWindow::MainWindow(Sensoray826 board, Controller controller, DataSaver& data
 
     connect(m_start_button, SIGNAL(pressed()), this, SLOT(insertion()));
     connect(m_stop_button, SIGNAL(pressed()), this, SLOT(insertion()));
+    connect(m_reel_back_button, SIGNAL(pressed()), this, SLOT(insertion()));
     connect(m_f_ref_inc_button, SIGNAL(pressed()), this, SLOT(fRefModif()));
     connect(m_f_ref_dec_button, SIGNAL(pressed()), this, SLOT(fRefModif()));
 
@@ -180,6 +182,7 @@ void MainWindow::applyParameters() {
         m_controller.setVProbeNom(v_probe_nom);
         m_controller.setVTendonRelNom(v_tendon_rel_nom);
         m_controller.setFMin(f_min);
+        m_controller.setFRef(f_min);
         m_controller.setXProbeMax(x_probe_max);
         m_controller.setKP(k_p);
         m_controller.setKI(k_i);
@@ -233,9 +236,22 @@ void MainWindow::insertion() {
         m_insertion_start_time = chrono::steady_clock::now();
         m_last_start_time = m_insertion_start_time;
         m_control_loop_timer->start(90);
+        m_stop_button->setEnabled(true);
     } else if (sender_obj == m_stop_button) {
         m_controller.stop();
         m_control_loop_timer->stop();
+        m_stop_button->setEnabled(false);
+    } else if (sender_obj == m_reel_back_button) {
+        m_control_loop_timer = new QTimer(this);
+        if (m_pid_checkbox->isChecked()) {
+            connect(m_control_loop_timer, SIGNAL(timeout()), this, SLOT(controlLoopPID()));
+        } else {
+            connect(m_control_loop_timer, SIGNAL(timeout()), this, SLOT(controlLoop()));
+        }
+        m_controller.startReelBack(10);
+        m_insertion_start_time = chrono::steady_clock::now();
+        m_last_start_time = m_insertion_start_time;
+        m_control_loop_timer->start(90);
     }
 }
 
@@ -290,6 +306,7 @@ void MainWindow::launchScript() {
         this->m_board.loadSensorCalibration(Sensoray826::load_sensor_u);
     } else if (sender_obj == m_dio_reset_button) {
         cout << "dio reset" << endl;
+        m_controller.stop();
         this->m_board.dioSourceReset();
     } else if (sender_obj == m_load_sensor_u_to_zero_button) {
         this->m_board.loadSensorOffsetCalibration(Sensoray826::load_sensor_u);

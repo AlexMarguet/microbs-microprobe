@@ -14,14 +14,27 @@ void Controller::startSetup() {
 }
 
 void Controller::start(float control_freq) {
-    if (m_v_probe == 0.) {
+    if (m_v_probe_nom == 0.) {
         m_max_loops = 10;
     } else {
-        m_max_loops = (m_x_probe_max/m_v_probe) * control_freq;
+        m_max_loops = (m_x_probe_max/m_v_probe_nom) * control_freq;
     }
     std::cout << m_max_loops << std::endl;
     m_board.setMotorDirection(Sensoray826::probe, Sensoray826::forward);
     m_board.motorOn(Sensoray826::probe);
+    m_v_probe = m_v_probe_nom;
+}
+
+void Controller::startReelBack(float control_freq) {
+    if (m_v_probe_nom == 0.) {
+        m_max_loops = 10;
+    } else {
+        m_max_loops = (m_x_probe_max/m_v_probe_nom) * control_freq;
+    }
+    std::cout << m_max_loops << std::endl;
+    m_board.setMotorDirection(Sensoray826::probe, Sensoray826::backward);
+    m_board.motorOn(Sensoray826::probe);
+    m_v_probe = -m_v_probe_nom;
 }
 
 void Controller::stop() {
@@ -98,11 +111,6 @@ void Controller::hold() {
     }
 }
 
-// DataSaver data_saver;
-//     data_saver.createCsv("experiment_insertion.csv");
-//     data_saver.writeCsv(k, f_data);
-//     data_saver.closeCsv();
-
 bool Controller::controlLoop() {
     float epsilon = 5.;
 
@@ -140,60 +148,51 @@ bool Controller::controlLoop() {
 }
 
 bool Controller::controlLoopPID() {
-    float epsilon = 5., v_u = 0., v_d = 0.;
-
-
     m_load[Sensoray826::load_sensor_u] = m_board.getLoadSensor(Sensoray826::load_sensor_u);
-    m_error[Sensoray826::load_sensor_u] = m_f_u_ref - m_load[Sensoray826::load_sensor_u];
-    v_u = m_k_p * m_error[Sensoray826::load_sensor_u] + m_k_i * (m_error[Sensoray826::load_sensor_u] + m_prev_error[Sensoray826::load_sensor_u]) + m_k_d * (m_error[Sensoray826::load_sensor_u] - m_prev_error[Sensoray826::load_sensor_u]);
-    if (v_u >= m_v_tendon_nom) {
-        v_u = m_v_tendon_nom;
+    m_error[Sensoray826::load_sensor_u] = -(m_f_u_ref - m_load[Sensoray826::load_sensor_u]);
+    m_v_tendon_u = m_k_p * m_error[Sensoray826::load_sensor_u] + m_k_i * (m_error[Sensoray826::load_sensor_u] + m_prev_error[Sensoray826::load_sensor_u]) 
+            + m_k_d * (m_error[Sensoray826::load_sensor_u] - m_prev_error[Sensoray826::load_sensor_u]);
+
+    if (m_v_tendon_u >= m_v_tendon_rel_nom) {
+        m_v_tendon_u = m_v_tendon_rel_nom;
+    } else if (m_v_tendon_u <= -m_v_tendon_rel_nom) {
+        m_v_tendon_u = -m_v_tendon_rel_nom;
     }
+
+    m_v_tendon_u = m_v_probe + m_v_tendon_u;
 
     m_prev_error[Sensoray826::load_sensor_u] = m_error[Sensoray826::load_sensor_u];
 
-    // std::cout << "PID out = " << v_u << std::endl;
-    if (m_error[Sensoray826::load_sensor_u] >= epsilon) {
-        // m_board.setMotorDirection(Sensoray826::tendon_u, Sensoray826::reel);
-        m_board.setMotorSpeed(Sensoray826::tendon_u, v_u);
-        // m_board.motorOn(Sensoray826::tendon_u);
-    } else if (m_error[Sensoray826::load_sensor_u] <= -epsilon) {
-        // m_board.setMotorDirection(Sensoray826::tendon_u, Sensoray826::release);
-        m_board.setMotorSpeed(Sensoray826::tendon_u, v_u);
-        // m_board.motorOn(Sensoray826::tendon_u);
-    } else {
-        m_board.motorOff(Sensoray826::tendon_u);
-    }
+    std::cout << "error = "<< m_error[Sensoray826::load_sensor_u]  << "v tendon u = " << m_v_tendon_u;
     
+    m_board.motorOn(Sensoray826::tendon_u, m_v_tendon_u);
+
 
     m_load[Sensoray826::load_sensor_d] = m_board.getLoadSensor(Sensoray826::load_sensor_d);
-    m_error[Sensoray826::load_sensor_d] = m_f_u_ref - m_load[Sensoray826::load_sensor_d];
-    v_d = m_k_p * m_error[Sensoray826::load_sensor_d] + m_k_i * (m_error[Sensoray826::load_sensor_d] + m_prev_error[Sensoray826::load_sensor_d]) + m_k_d * (m_error[Sensoray826::load_sensor_d] - m_prev_error[Sensoray826::load_sensor_d]);
+    m_error[Sensoray826::load_sensor_d] = -(m_f_d_ref - m_load[Sensoray826::load_sensor_d]);
+    m_v_tendon_d = m_k_p * m_error[Sensoray826::load_sensor_d] + m_k_i * (m_error[Sensoray826::load_sensor_d] + m_prev_error[Sensoray826::load_sensor_d]) 
+            + m_k_d * (m_error[Sensoray826::load_sensor_d] - m_prev_error[Sensoray826::load_sensor_d]);
     
-    if (v_d >= m_v_tendon_nom) {
-        v_d = m_v_tendon_nom;
+    if (m_v_tendon_d >= m_v_tendon_rel_nom) {
+        m_v_tendon_d = m_v_tendon_rel_nom;
+    } else if (m_v_tendon_d <= -m_v_tendon_rel_nom) {
+        m_v_tendon_d = -m_v_tendon_rel_nom;
     }
+
+    m_v_tendon_d = m_v_probe + m_v_tendon_d;
 
     m_prev_error[Sensoray826::load_sensor_d] = m_error[Sensoray826::load_sensor_d];
 
-    if (m_error[Sensoray826::load_sensor_d] >= epsilon) {
-        // m_board.setMotorDirection(Sensoray826::tendon_d, Sensoray826::reel);
-        m_board.setMotorSpeed(Sensoray826::tendon_d, v_d);
-        // m_board.motorOn(Sensoray826::tendon_d);
-    } else if (m_error[Sensoray826::load_sensor_d] <= -epsilon) {
-        // m_board.setMotorDirection(Sensoray826::tendon_d, Sensoray826::release);
-        m_board.setMotorSpeed(Sensoray826::tendon_d, v_d);
-        // m_board.motorOn(Sensoray826::tendon_d);
-    } else {
-        m_board.motorOff(Sensoray826::tendon_d);
-    }
+    std::cout << "error = "<< m_error[Sensoray826::load_sensor_d]  << "v tendon d = " << m_v_tendon_d << std::endl;
+
+    m_board.motorOn(Sensoray826::tendon_d, m_v_tendon_d);
 
     m_loop_iter++;
     
     float time = m_loop_iter * 0.1;
     float x_probe = time * m_v_probe;
     float data[] = {time, x_probe, m_f_u_ref, m_f_d_ref, m_load[Sensoray826::load_sensor_u], m_load[Sensoray826::load_sensor_d],
-            m_v_probe, v_u, v_d};
+            m_v_probe, m_v_tendon_u, m_v_tendon_d};
 
     m_data_saver.writeDataLine(data, DataSaver::header_size);
     

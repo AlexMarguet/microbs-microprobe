@@ -99,6 +99,7 @@ private:
     //Insertion box
     QPushButton* m_start_button;
     QPushButton* m_stop_button;
+    QPushButton* m_reel_back_button;
     QPushButton* m_f_ref_inc_button;
     QPushButton* m_f_ref_dec_button;
     QLineEdit* m_f_increment;

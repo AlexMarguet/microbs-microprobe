@@ -28,6 +28,8 @@ public:
 
     void start(float control_freq);
 
+    void startReelBack(float control_freq);
+
     void stop();
 
     void setVProbeNom(float v_probe_nom);

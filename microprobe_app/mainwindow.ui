@@ -414,6 +414,9 @@
      <string>Insertion</string>
     </property>
     <widget class="QPushButton" name="pushButton_10">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
      <property name="geometry">
       <rect>
        <x>480</x>
@@ -501,7 +504,7 @@
       </rect>
      </property>
      <property name="text">
-      <string>50</string>
+      <string>100</string>
      </property>
     </widget>
     <widget class="QLabel" name="label_8">
@@ -550,6 +553,19 @@
      </property>
      <property name="text">
       <string>PID</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="pushButton_21">
+     <property name="geometry">
+      <rect>
+       <x>480</x>
+       <y>230</y>
+       <width>101</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Reel back</string>
      </property>
     </widget>
    </widget>
@@ -601,7 +617,7 @@
       </rect>
      </property>
      <property name="text">
-      <string>1.5</string>
+      <string>1.0</string>
      </property>
     </widget>
     <widget class="QLabel" name="label_10">
@@ -627,7 +643,7 @@
       </rect>
      </property>
      <property name="text">
-      <string>50</string>
+      <string>100</string>
      </property>
     </widget>
     <widget class="QLabel" name="label_11">
@@ -698,7 +714,7 @@
       </rect>
      </property>
      <property name="text">
-      <string>0.5</string>
+      <string>0.1</string>
      </property>
     </widget>
     <widget class="QLabel" name="label_14">
@@ -724,7 +740,7 @@
       </rect>
      </property>
      <property name="text">
-      <string>0.</string>
+      <string>0.02</string>
      </property>
     </widget>
     <widget class="QLabel" name="label_15">
@@ -750,7 +766,7 @@
       </rect>
      </property>
      <property name="text">
-      <string>0.</string>
+      <string>0.05</string>
      </property>
     </widget>
     <widget class="QLabel" name="label_16">
@@ -774,29 +790,6 @@
        <width>62</width>
        <height>26</height>
       </rect>
-     </property>
-    </widget>
-    <widget class="QLineEdit" name="lineEdit_15">
-     <property name="geometry">
-      <rect>
-       <x>242</x>
-       <y>160</y>
-       <width>41</width>
-       <height>26</height>
-      </rect>
-     </property>
-    </widget>
-    <widget class="QLabel" name="label_19">
-     <property name="geometry">
-      <rect>
-       <x>160</x>
-       <y>160</y>
-       <width>101</width>
-       <height>20</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>F at V max</string>
      </property>
     </widget>
    </widget>

@@ -109,47 +109,34 @@ void Sensoray826::setMotorDirection(Motor motor, Direction direction) {
 	this->dioOut(dio, level);
 }
 
-// void Sensoray826::setMotorSpeed(Motor motor, uint speed) {
-// 	float period = 1/ (speed * step_per_tour);
-// 	uint pulse_ontime, pulse_offtime;
-// 	if (period >= MIN_ALLOWED_PWM_T * 2) {
-// 		pulse_ontime = (uint) period/2;
-// 		pulse_offtime = (uint) period/2;
-// 	}
-
-// 	uint ctr = motor_ctr_chan[motor];
-// 	uint dio = motor_pulse_dio[motor];
-// 	this->setPWM(ctr, pulse_ontime, pulse_offtime);
-// }
-
-// void Sensoray826::setMotorSpeed(Motor motor, float speed) {
-// 	if (speed == 0.) {
-// 		return;
-// 	}
-// 	if (speed <= 0) {
-// 		speed = -speed;
-// 	}
-
-// 	float period =  1000000 * (shaft_radius[motor] * rad_per_step) / (speed * ustep[motor]); // [s] to [us]
-
-// 	if (period >= UINT_MAX) {
-// 		period = UINT_MAX; // limit reached at ~1e-7 [mm/s]
-// 	}
-
-// 	uint pulse_ontime, pulse_offtime; // us
-// 	if (period >= min_pulse_ontime * 2) {
-// 		pulse_ontime = (uint) period/2;
-// 		pulse_offtime = (uint) period/2;
-// 	}
-// 	//! Also block for uint overflow at low speed
-
-// 	uint ctr = motor_ctr_chan[motor];
-
-// 	// cout << "speed =" << speed << " and period =" << period << endl;
-// 	this->setPWM(ctr, pulse_ontime, pulse_offtime);
-// }
-
 void Sensoray826::setMotorSpeed(Motor motor, float speed) {
+	if (speed == 0.) {
+		return;
+	}
+	if (speed <= 0) {
+		speed = -speed;
+	}
+
+	float period =  1000000 * (shaft_radius[motor] * rad_per_step) / (speed * ustep[motor]); // [s] to [us]
+
+	if (period >= UINT_MAX) {
+		period = UINT_MAX; // limit reached at ~1e-7 [mm/s]
+	}
+
+	uint pulse_ontime, pulse_offtime; // us
+	if (period >= min_pulse_ontime * 2) {
+		pulse_ontime = (uint) period/2;
+		pulse_offtime = (uint) period/2;
+	}
+	//! Also block for uint overflow at low speed
+
+	uint ctr = motor_ctr_chan[motor];
+
+	// cout << "speed =" << speed << " and period =" << period << endl;
+	this->setPWM(ctr, pulse_ontime, pulse_offtime);
+}
+
+void Sensoray826::motorOn(Motor motor, float speed) {
 	if (speed == 0.) {
 		this->motorOff(motor);
 		return;
@@ -188,6 +175,7 @@ void Sensoray826::setMotorSpeed(Motor motor, float speed) {
 	uint ctr = motor_ctr_chan[motor];
 
 	// cout << "speed =" << speed << " and period =" << period << endl;
+	this->setMotorDirection(motor, dir);
 	this->setPWM(ctr, pulse_ontime, pulse_offtime);
 	this->motorOn(motor);
 }

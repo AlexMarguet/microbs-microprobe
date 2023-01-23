@@ -61,6 +61,7 @@ public:
 	void motorsSetup();
 
 	void motorOn(Motor motor);
+	void motorOn(Motor motor, float speed);
 
 	void motorOff(Motor motor);
 
