@@ -46,6 +46,9 @@ public:
     
     
 private:
+    void fixedSpeedControl();
+    void pidControl();
+
     Sensoray826 m_board;
     
     DataSaver& m_data_saver;

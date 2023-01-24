@@ -113,14 +113,9 @@ private:
     //Datasave box
     QPushButton* m_record_button;
     QLineEdit* m_file_name_lineedit;
-    QPushButton* m_save_button;
-
-    //Scripts box
-    QPushButton* m_setup_button;
-    QPushButton* m_insertion_button;
-    QPushButton* m_calibration_button;
     
-    QPushButton* m_dio_reset_button;
+    //Out-of-box
+    QPushButton* m_emergency_stop;
 
 };
 #endif // MAINWINDOW_H

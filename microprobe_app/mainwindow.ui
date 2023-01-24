@@ -323,82 +323,23 @@
      </property>
     </widget>
    </widget>
-   <widget class="QGroupBox" name="groupBox_3">
-    <property name="geometry">
-     <rect>
-      <x>950</x>
-      <y>250</y>
-      <width>141</width>
-      <height>191</height>
-     </rect>
-    </property>
-    <property name="title">
-     <string>Scripts</string>
-    </property>
-    <widget class="QPushButton" name="pushButton_6">
-     <property name="geometry">
-      <rect>
-       <x>30</x>
-       <y>110</y>
-       <width>93</width>
-       <height>29</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>Insertion</string>
-     </property>
-    </widget>
-    <widget class="QPushButton" name="pushButton_7">
-     <property name="geometry">
-      <rect>
-       <x>30</x>
-       <y>30</y>
-       <width>93</width>
-       <height>29</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>Calibration</string>
-     </property>
-    </widget>
-    <widget class="QPushButton" name="pushButton_13">
-     <property name="geometry">
-      <rect>
-       <x>30</x>
-       <y>150</y>
-       <width>93</width>
-       <height>29</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>Test script</string>
-     </property>
-    </widget>
-    <widget class="QPushButton" name="pushButton_5">
-     <property name="geometry">
-      <rect>
-       <x>30</x>
-       <y>70</y>
-       <width>93</width>
-       <height>29</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>Setup</string>
-     </property>
-    </widget>
-   </widget>
    <widget class="QPushButton" name="pushButton_12">
     <property name="geometry">
      <rect>
-      <x>950</x>
-      <y>450</y>
-      <width>181</width>
-      <height>151</height>
+      <x>1020</x>
+      <y>510</y>
+      <width>111</width>
+      <height>91</height>
      </rect>
     </property>
+    <property name="font">
+     <font>
+      <pointsize>14</pointsize>
+      <bold>true</bold>
+     </font>
+    </property>
     <property name="text">
-     <string>DIO reset</string>
+     <string>STOP</string>
     </property>
    </widget>
    <widget class="QGroupBox" name="groupBox_4">
@@ -554,6 +495,9 @@
      <property name="text">
       <string>PID</string>
      </property>
+     <property name="checked">
+      <bool>true</bool>
+     </property>
     </widget>
     <widget class="QPushButton" name="pushButton_21">
      <property name="geometry">
@@ -617,7 +561,7 @@
       </rect>
      </property>
      <property name="text">
-      <string>1.0</string>
+      <string>2.0</string>
      </property>
     </widget>
     <widget class="QLabel" name="label_10">
@@ -669,7 +613,7 @@
       </rect>
      </property>
      <property name="text">
-      <string>10</string>
+      <string>20</string>
      </property>
     </widget>
     <widget class="QLabel" name="label_12">
@@ -714,7 +658,7 @@
       </rect>
      </property>
      <property name="text">
-      <string>0.1</string>
+      <string>0.05</string>
      </property>
     </widget>
     <widget class="QLabel" name="label_14">
@@ -740,7 +684,7 @@
       </rect>
      </property>
      <property name="text">
-      <string>0.02</string>
+      <string>0.004</string>
      </property>
     </widget>
     <widget class="QLabel" name="label_15">
@@ -766,7 +710,7 @@
       </rect>
      </property>
      <property name="text">
-      <string>0.05</string>
+      <string>0.01</string>
      </property>
     </widget>
     <widget class="QLabel" name="label_16">
@@ -815,7 +759,7 @@
       </rect>
      </property>
      <property name="text">
-      <string>example</string>
+      <string>record1</string>
      </property>
     </widget>
     <widget class="QLabel" name="label_17">
@@ -855,19 +799,6 @@
      </property>
      <property name="text">
       <string>Record</string>
-     </property>
-    </widget>
-    <widget class="QPushButton" name="pushButton_20">
-     <property name="geometry">
-      <rect>
-       <x>200</x>
-       <y>70</y>
-       <width>93</width>
-       <height>29</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>Save</string>
      </property>
     </widget>
    </widget>

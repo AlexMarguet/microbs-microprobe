@@ -161,6 +161,11 @@ void Sensoray826::motorOn(Motor motor, float speed) {
 
 	float period =  1000000 * (shaft_radius[motor] * rad_per_step) / (speed * ustep[motor]); // [s] to [us]
 
+// correction for wrong probe linear velocity
+	if (motor == probe) {
+		period = period * 0.5; // Probe travelled 1.5cm instead of 2cm. Must increase velocity of 33%
+	}
+
 	if (period >= UINT_MAX) {
 		period = UINT_MAX; // limit reached at ~1e-7 [mm/s]
 	}

@@ -75,15 +75,6 @@ MainWindow::MainWindow(Sensoray826 board, Controller controller, DataSaver& data
     connect(m_f_ref_inc_button, SIGNAL(pressed()), this, SLOT(fRefModif()));
     connect(m_f_ref_dec_button, SIGNAL(pressed()), this, SLOT(fRefModif()));
 
-    //Scripts box
-    m_setup_button = findChild<QPushButton*>("pushButton_5");
-    m_insertion_button = findChild<QPushButton*>("pushButton_6");
-    m_calibration_button = findChild<QPushButton*>("pushButton_7");
-
-    connect(m_setup_button, SIGNAL(pressed()), this, SLOT(launchScript()));
-    connect(m_insertion_button, SIGNAL(pressed()), this, SLOT(launchScript()));
-    connect(m_calibration_button, SIGNAL(pressed()), this, SLOT(launchScript()));
-
     //Sensors box
     m_load_sensor_u = findChild<QLineEdit*>("lineEdit");
     m_load_sensor_d = findChild<QLineEdit*>("lineEdit_2");
@@ -98,18 +89,17 @@ MainWindow::MainWindow(Sensoray826 board, Controller controller, DataSaver& data
     //Datasave box
     m_record_button = findChild<QPushButton*>("pushButton_19");
     m_file_name_lineedit = findChild<QLineEdit*>("lineEdit_14");
-    m_save_button = findChild<QPushButton*>("pushButton_20");
 
     connect(m_record_button, SIGNAL(pressed()), this, SLOT(dataRecord()));
-    connect(m_save_button, SIGNAL(pressed()), this, SLOT(dataRecord()));
 
-    m_dio_reset_button = findChild<QPushButton*>("pushButton_12");
-    connect(m_dio_reset_button, SIGNAL(pressed()), this, SLOT(launchScript()));
+    m_emergency_stop = findChild<QPushButton*>("pushButton_12");
+    connect(m_emergency_stop, SIGNAL(pressed()), this, SLOT(launchScript()));
 
     //Timer
     m_timer = new QTimer(this);
     connect(m_timer, SIGNAL(timeout()), this, SLOT(updateValue()));
-    m_timer->start(500);
+    m_timer->start(505);
+    m_control_loop_timer = new QTimer(this);
 
     this->applyParameters();
 }
@@ -117,6 +107,7 @@ MainWindow::MainWindow(Sensoray826 board, Controller controller, DataSaver& data
 MainWindow::~MainWindow()
 {
     // m_data_saver.closeCsv();
+    m_controller.stop();
     m_board.dioSourceReset();
     m_board.close();
     delete ui;
@@ -197,6 +188,7 @@ void MainWindow::applyParameters() {
 void MainWindow::holdCheckbox() {
     if (m_hold_checkbox->isChecked()) {
         m_controller.startSetup();
+        delete m_control_loop_timer;
         m_control_loop_timer = new QTimer(this);
         connect(m_control_loop_timer, SIGNAL(timeout()), this, SLOT(hold()));
         m_control_loop_timer->start(100);
@@ -226,6 +218,7 @@ void MainWindow::insertion() {
     QObject* sender_obj = sender();
     // QPushButton* button = qobject_cast<QPushButton*>(sender());
     if (sender_obj == m_start_button) {
+        delete m_control_loop_timer;
         m_control_loop_timer = new QTimer(this);
         if (m_pid_checkbox->isChecked()) {
             connect(m_control_loop_timer, SIGNAL(timeout()), this, SLOT(controlLoopPID()));
@@ -242,6 +235,7 @@ void MainWindow::insertion() {
         m_control_loop_timer->stop();
         m_stop_button->setEnabled(false);
     } else if (sender_obj == m_reel_back_button) {
+        delete m_control_loop_timer;
         m_control_loop_timer = new QTimer(this);
         if (m_pid_checkbox->isChecked()) {
             connect(m_control_loop_timer, SIGNAL(timeout()), this, SLOT(controlLoopPID()));
@@ -269,6 +263,7 @@ void MainWindow::controlLoop() { // Mean duration: ~0.2 [ms] ; Mean loop cycle: 
     if(this->m_controller.controlLoop()) {
         m_controller.stop();
         m_control_loop_timer->stop();
+        m_stop_button->setEnabled(false);
         chrono::duration<double, milli> elapsed {chrono::steady_clock::now() - m_insertion_start_time};
         cout << "Total insertion duration: " << elapsed.count() << " ms" << endl;
     }
@@ -284,6 +279,7 @@ void MainWindow::controlLoopPID() { // Mean duration: ~0.2 [ms] ; Mean loop cycl
     if(this->m_controller.controlLoopPID()) {
         m_controller.stop();
         m_control_loop_timer->stop();
+        m_stop_button->setEnabled(false);
         chrono::duration<double, milli> elapsed {chrono::steady_clock::now() - m_insertion_start_time};
         cout << "Total insertion duration: " << elapsed.count() << " ms" << endl;
     }
@@ -295,17 +291,10 @@ void MainWindow::controlLoopPID() { // Mean duration: ~0.2 [ms] ; Mean loop cycl
 void MainWindow::launchScript() {
     QObject* sender_obj = sender();
 
-    if (sender_obj == m_setup_button) {
-        cout << "setup" << endl;
-        m_controller.startSetup();
+    if (sender_obj == m_emergency_stop) {
+        cout << "emergency stop" << endl;
+        delete m_control_loop_timer;
         m_control_loop_timer = new QTimer(this);
-        connect(m_control_loop_timer, SIGNAL(timeout()), this, SLOT(setup()));
-        m_control_loop_timer->start(100);
-    } else if (sender_obj == m_calibration_button) {
-        cout << "calibration" << endl;
-        this->m_board.loadSensorCalibration(Sensoray826::load_sensor_u);
-    } else if (sender_obj == m_dio_reset_button) {
-        cout << "dio reset" << endl;
         m_controller.stop();
         this->m_board.dioSourceReset();
     } else if (sender_obj == m_load_sensor_u_to_zero_button) {
@@ -328,7 +317,5 @@ void MainWindow::dataRecord() {
 
     if (sender_obj == m_record_button) {
         m_data_saver.createCsv(m_file_name_lineedit->text().toStdString());
-
-    } else if (sender_obj == m_save_button) {
     }
 }
