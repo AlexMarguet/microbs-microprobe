@@ -24,7 +24,7 @@ void DataSaver::createCsv(string name) {
     // fstream file_stream;
     // file_stream.open(m_file_name, fstream::out);
 
-    this->writeHeader();
+    // this->writeHeader();
 }
 
 void DataSaver::writeHeader() {
@@ -34,6 +34,18 @@ void DataSaver::writeHeader() {
     for (int i = 0; i < header_size; i++) {
         file_stream << header[i] << separator;
     }
+    file_stream << endl;
+}
+
+void DataSaver::writeHeader(string add) {
+    fstream file_stream;
+    file_stream.open(m_file_name, fstream::out);
+
+    for (int i = 0; i < header_size; i++) {
+        file_stream << header[i] << separator;
+    }
+
+    file_stream << add;
     file_stream << endl;
 }
 

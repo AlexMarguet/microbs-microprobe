@@ -92,8 +92,10 @@ MainWindow::MainWindow(Sensoray826 board, Controller controller, DataSaver& data
 
     connect(m_record_button, SIGNAL(pressed()), this, SLOT(dataRecord()));
 
-    m_emergency_stop = findChild<QPushButton*>("pushButton_12");
-    connect(m_emergency_stop, SIGNAL(pressed()), this, SLOT(launchScript()));
+    m_emergency_stop_button = findChild<QPushButton*>("pushButton_12");
+    connect(m_emergency_stop_button, SIGNAL(pressed()), this, SLOT(launchScript()));
+    m_script_button = findChild<QPushButton*>("pushButton_22");
+    connect(m_script_button, SIGNAL(pressed()), this, SLOT(launchScript()));
 
     //Timer
     m_timer = new QTimer(this);
@@ -102,6 +104,7 @@ MainWindow::MainWindow(Sensoray826 board, Controller controller, DataSaver& data
     m_control_loop_timer = new QTimer(this);
 
     this->applyParameters();
+    m_board.setMotorSpeed(Sensoray826::tendon_d, 2);
 }
 
 MainWindow::~MainWindow()
@@ -291,7 +294,7 @@ void MainWindow::controlLoopPID() { // Mean duration: ~0.2 [ms] ; Mean loop cycl
 void MainWindow::launchScript() {
     QObject* sender_obj = sender();
 
-    if (sender_obj == m_emergency_stop) {
+    if (sender_obj == m_emergency_stop_button) {
         cout << "emergency stop" << endl;
         delete m_control_loop_timer;
         m_control_loop_timer = new QTimer(this);
@@ -301,6 +304,13 @@ void MainWindow::launchScript() {
         this->m_board.loadSensorOffsetCalibration(Sensoray826::load_sensor_u);
     } else if (sender_obj == m_load_sensor_d_to_zero_button) {
         this->m_board.loadSensorOffsetCalibration(Sensoray826::load_sensor_d);
+    } else if (sender_obj == m_script_button) {
+        auto start = chrono::steady_clock::now();
+        m_board.motorOn(Sensoray826::tendon_d, -3);
+        Sleep(1000);
+        chrono::duration<double, milli> elapsed {chrono::steady_clock::now() - start};
+        cout << "Script duration: " << elapsed.count() << " ms" << endl;
+        m_board.motorOn(Sensoray826::tendon_d, 0);
     }
 }
 
@@ -317,5 +327,8 @@ void MainWindow::dataRecord() {
 
     if (sender_obj == m_record_button) {
         m_data_saver.createCsv(m_file_name_lineedit->text().toStdString());
+        // m_data_saver.writeHeader();
+        string params = "kp=" + m_k_p->text().toStdString() + ",ki=" + m_k_i->text().toStdString() + ",kd=" + m_k_d->text().toStdString();
+        m_data_saver.writeHeader(params);
     }
 }

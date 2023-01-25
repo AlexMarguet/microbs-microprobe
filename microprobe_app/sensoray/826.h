@@ -48,6 +48,7 @@ public:
 	static const uint ustep[];
 	static const float shaft_radius[];
 	static const float v_manual[];
+	static const float correction_coef[];
 	static const float pulse_ontime_manual[];
 
 	Sensoray826();
@@ -105,7 +106,7 @@ public:
 private:
 	uint m_board = 0;
 
-	float m_load_sensor_offset[2] = {-124, -142}; // [mN]
+	float m_load_sensor_offset[2] = {-117, -141}; // [mN]
 	float m_load_sensor_sensibility[2] = {100, 116.3}; // [mN/V]
 };
 

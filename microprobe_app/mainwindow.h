@@ -115,7 +115,9 @@ private:
     QLineEdit* m_file_name_lineedit;
     
     //Out-of-box
-    QPushButton* m_emergency_stop;
+    QPushButton* m_emergency_stop_button;
+
+    QPushButton* m_script_button;
 
 };
 #endif // MAINWINDOW_H

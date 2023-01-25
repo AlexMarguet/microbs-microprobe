@@ -8,6 +8,7 @@
 #endif
 
 #include <iostream>
+#include <numeric>
 #include "sensoray/826.h"
 #include "tools/data_saver.h"
 
@@ -76,6 +77,9 @@ private:
 
     float m_error[2] = {0, 0};
     float m_prev_error[2] = {0, 0};
+
+    int m_integration_period = 2;
+    std::array<std::vector<float>, 2> t_prev_error;
 
     //Recorded data
     // vector<float> m_rec_time;

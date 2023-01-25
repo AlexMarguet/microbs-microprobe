@@ -20,6 +20,7 @@ public:
 	void createCsv(string name);
 
 	void writeHeader();
+	void writeHeader(string add);
 
 	void writeCsv(string content);
 

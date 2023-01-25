@@ -6,6 +6,10 @@ Controller::Controller(Sensoray826 board, DataSaver& data_saver)
     : m_board(board),
     m_data_saver(data_saver) {
     
+    for (int i = 0; i<m_integration_period ; i++) {
+        t_prev_error[0].push_back(0);
+        t_prev_error[1].push_back(0);
+    }
 }
 
 void Controller::startSetup() {
@@ -191,7 +195,16 @@ void Controller::fixedSpeedControl() {
 void Controller::pidControl() {
     m_load[Sensoray826::load_sensor_u] = m_board.getLoadSensor(Sensoray826::load_sensor_u);
     m_error[Sensoray826::load_sensor_u] = -(m_f_u_ref - m_load[Sensoray826::load_sensor_u]);
-    m_v_tendon_u = m_k_p * m_error[Sensoray826::load_sensor_u] + m_k_i * (m_error[Sensoray826::load_sensor_u] + m_prev_error[Sensoray826::load_sensor_u]) 
+
+    t_prev_error[Sensoray826::load_sensor_u].push_back(m_error[Sensoray826::load_sensor_u]);
+    t_prev_error[Sensoray826::load_sensor_u].erase(t_prev_error[Sensoray826::load_sensor_u].begin());
+
+    // for (int n : t_prev_error[Sensoray826::load_sensor_u]) {cout << n << " ";}
+    // cout << endl;
+    // auto result = std::reduce(t_prev_error[Sensoray826::load_sensor_u].begin(), t_prev_error[Sensoray826::load_sensor_u].end());
+    // cout << result << endl;
+
+    m_v_tendon_u = m_k_p * m_error[Sensoray826::load_sensor_u] + m_k_i * (std::reduce(t_prev_error[Sensoray826::load_sensor_u].begin(), t_prev_error[Sensoray826::load_sensor_u].end())) / m_integration_period
             + m_k_d * (m_error[Sensoray826::load_sensor_u] - m_prev_error[Sensoray826::load_sensor_u]);
 
     if (m_v_tendon_u >= m_v_tendon_rel_nom) {
@@ -200,9 +213,11 @@ void Controller::pidControl() {
         m_v_tendon_u = -m_v_tendon_rel_nom;
     }
 
-    m_v_tendon_u = m_v_probe + m_v_tendon_u;
+   m_v_tendon_u = m_v_probe + m_v_tendon_u;
+  // m_v_tendon_u += 0.01*PID_value;
 
-    m_prev_error[Sensoray826::load_sensor_u] = m_error[Sensoray826::load_sensor_u];
+
+    // m_prev_error[Sensoray826::load_sensor_u] = m_error[Sensoray826::load_sensor_u];
 
     // std::cout << "error = "<< m_error[Sensoray826::load_sensor_u]  << "v tendon u = " << m_v_tendon_u;
     

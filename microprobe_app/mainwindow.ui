@@ -535,7 +535,7 @@
       </rect>
      </property>
      <property name="text">
-      <string>1.0</string>
+      <string>0.5</string>
      </property>
     </widget>
     <widget class="QLabel" name="label_6">
@@ -561,7 +561,7 @@
       </rect>
      </property>
      <property name="text">
-      <string>2.0</string>
+      <string>10.0</string>
      </property>
     </widget>
     <widget class="QLabel" name="label_10">
@@ -587,7 +587,7 @@
       </rect>
      </property>
      <property name="text">
-      <string>100</string>
+      <string>50</string>
      </property>
     </widget>
     <widget class="QLabel" name="label_11">
@@ -658,7 +658,7 @@
       </rect>
      </property>
      <property name="text">
-      <string>0.05</string>
+      <string>0.1</string>
      </property>
     </widget>
     <widget class="QLabel" name="label_14">
@@ -684,7 +684,7 @@
       </rect>
      </property>
      <property name="text">
-      <string>0.004</string>
+      <string>0.01</string>
      </property>
     </widget>
     <widget class="QLabel" name="label_15">
@@ -801,6 +801,19 @@
       <string>Record</string>
      </property>
     </widget>
+   </widget>
+   <widget class="QPushButton" name="pushButton_22">
+    <property name="geometry">
+     <rect>
+      <x>900</x>
+      <y>550</y>
+      <width>101</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Script</string>
+    </property>
    </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
