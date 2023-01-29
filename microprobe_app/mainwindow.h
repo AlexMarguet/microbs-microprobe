@@ -108,7 +108,15 @@ private:
 
     float m_f_ref = 0;
     chrono::time_point<chrono::steady_clock> m_last_start_time;
-    chrono::time_point<chrono::steady_clock> m_insertion_start_time;    
+    chrono::time_point<chrono::steady_clock> m_insertion_start_time;
+
+    uint m_k_loop = 0;
+    uint m_step_start[] = {20};
+    uint m_step_stop[] = {40};
+    float m_step_height[] = {100};
+    uint m_step_iter = 0;
+    uint m_max_steps = 0;
+
     
     //Datasave box
     QPushButton* m_record_button;

@@ -276,12 +276,25 @@ void MainWindow::controlLoop() { // Mean duration: ~0.2 [ms] ; Mean loop cycle: 
 
 void MainWindow::controlLoopPID() { // Mean duration: ~0.2 [ms] ; Mean loop cycle: ~110 [ms]
     auto start = chrono::steady_clock::now();
-    chrono::duration<double, milli> elapsed {start - m_last_start_time};
+    // chrono::duration<double, milli> elapsed {start - m_last_start_time};
     // cout << "Loop period: " << elapsed.count() << " ms" << endl;
+    m_k_loop++;
+    if (m_k_loop >= m_step_start[m_step_iter]) {
+        if (m_k_loop < m_step_stop[m_step_iter]) {
+            m_controller.setFRef(m_step_height[m_step_iter]);
+        } else {
+            m_controller.setFRef(0);
+            if (m_step_iter < m_max_steps) {
+                m_step_iter++;
+            }
+        }
+    }
 
     if(this->m_controller.controlLoopPID()) {
         m_controller.stop();
         m_control_loop_timer->stop();
+        m_k_loop = 0;
+        m_step_iter = 0;
         m_stop_button->setEnabled(false);
         chrono::duration<double, milli> elapsed {chrono::steady_clock::now() - m_insertion_start_time};
         cout << "Total insertion duration: " << elapsed.count() << " ms" << endl;
