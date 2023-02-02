@@ -77,6 +77,9 @@ private:
     QPushButton* m_tendon_d_reel_button;
     QPushButton* m_tendon_d_release_button;
     QCheckBox* m_hold_checkbox;
+    QLineEdit* m_manual_v_p_lineedit;
+    QLineEdit* m_manual_v_t_lineedit;
+
 
     //Parameters Box
     QLineEdit* m_v_probe_nom;
@@ -111,9 +114,9 @@ private:
     chrono::time_point<chrono::steady_clock> m_insertion_start_time;
 
     uint m_k_loop = 0;
-    uint m_step_start[] = {20};
-    uint m_step_stop[] = {40};
-    float m_step_height[] = {100};
+    uint m_step_start[1] = {20};
+    uint m_step_stop[1] = {40};
+    float m_step_height[1] = {100};
     uint m_step_iter = 0;
     uint m_max_steps = 0;
 

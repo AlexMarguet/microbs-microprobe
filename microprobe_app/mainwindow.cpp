@@ -22,6 +22,8 @@ MainWindow::MainWindow(Sensoray826 board, Controller controller, DataSaver& data
     m_tendon_d_release_button = findChild<QPushButton*>("pushButton_8");
     m_tendon_d_reel_button = findChild<QPushButton*>("pushButton_11");
     m_hold_checkbox = findChild<QCheckBox*>("checkBox");
+    m_manual_v_p_lineedit = findChild<QLineEdit*>("lineEdit_15");
+    m_manual_v_t_lineedit = findChild<QLineEdit*>("lineEdit_16");
 
     connect(m_probe_fwd_button, SIGNAL(pressed()), this, SLOT(activateMotor()));
     connect(m_probe_bwd_button, SIGNAL(pressed()), this, SLOT(activateMotor()));
@@ -121,6 +123,7 @@ void MainWindow::activateMotor() {
     // QPushButton* button = qobject_cast<QPushButton*>(sender());
     Sensoray826::Direction direction;
     Sensoray826::Motor motor;
+    float speed = 0;
 
     if (sender_obj == m_tendon_u_reel_button) {
         motor = Sensoray826::tendon_u;
@@ -142,7 +145,13 @@ void MainWindow::activateMotor() {
         direction = Sensoray826::backward;
     }
     
+    if (motor == Sensoray826::tendon_u || motor == Sensoray826::tendon_d) {
+        speed = m_manual_v_t_lineedit->text().toFloat();
+    } else {
+        speed = m_manual_v_p_lineedit->text().toFloat();
+    }
     m_board.setMotorDirection(motor, direction);
+    m_board.setMotorSpeed(motor, speed);
     m_board.motorOn(motor);
 }
 
