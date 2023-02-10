@@ -1,3 +1,5 @@
+# For more information, see https://doc.qt.io/qt-6/cmake-get-started.html
+
 cmake_minimum_required(VERSION 3.5)
 
 project(microprobe_app VERSION 0.1 LANGUAGES CXX)
