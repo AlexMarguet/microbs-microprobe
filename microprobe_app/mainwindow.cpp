@@ -287,17 +287,19 @@ void MainWindow::controlLoopPID() { // Mean duration: ~0.2 [ms] ; Mean loop cycl
     auto start = chrono::steady_clock::now();
     // chrono::duration<double, milli> elapsed {start - m_last_start_time};
     // cout << "Loop period: " << elapsed.count() << " ms" << endl;
-    m_k_loop++;
-    if (m_k_loop >= m_step_start[m_step_iter]) {
-        if (m_k_loop < m_step_stop[m_step_iter]) {
-            m_controller.setFRef(m_step_height[m_step_iter]);
-        } else {
-            m_controller.setFRef(0);
-            if (m_step_iter < m_max_steps) {
-                m_step_iter++;
-            }
-        }
-    }
+
+
+    // m_k_loop++;
+    // if (m_k_loop >= m_step_start[m_step_iter]) {
+    //     if (m_k_loop < m_step_stop[m_step_iter]) {
+    //         m_controller.setFRef(m_step_height[m_step_iter]);
+    //     } else {
+    //         m_controller.setFRef(0);
+    //         if (m_step_iter < m_max_steps) {
+    //             m_step_iter++;
+    //         }
+    //     }
+    // }
 
     if(this->m_controller.controlLoopPID()) {
         m_controller.stop();
@@ -328,8 +330,8 @@ void MainWindow::launchScript() {
         this->m_board.loadSensorOffsetCalibration(Sensoray826::load_sensor_d);
     } else if (sender_obj == m_script_button) {
         auto start = chrono::steady_clock::now();
-        m_board.motorOn(Sensoray826::tendon_d, -3);
-        Sleep(1000);
+        m_board.motorOn(Sensoray826::tendon_d, 3);
+        Sleep(5000);
         chrono::duration<double, milli> elapsed {chrono::steady_clock::now() - start};
         cout << "Script duration: " << elapsed.count() << " ms" << endl;
         m_board.motorOn(Sensoray826::tendon_d, 0);

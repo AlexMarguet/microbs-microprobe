@@ -114,11 +114,11 @@ private:
     chrono::time_point<chrono::steady_clock> m_insertion_start_time;
 
     uint m_k_loop = 0;
-    uint m_step_start[1] = {20};
-    uint m_step_stop[1] = {40};
-    float m_step_height[1] = {100};
+    uint m_step_start[2] = {20, 80};
+    uint m_step_stop[2] = {60, 120};
+    float m_step_height[2] = {100, -100};
     uint m_step_iter = 0;
-    uint m_max_steps = 0;
+    uint m_max_steps = 1;
 
     
     //Datasave box

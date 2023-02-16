@@ -106,7 +106,7 @@ public:
 private:
 	uint m_board = 0;
 
-	float m_load_sensor_offset[2] = {-107, -132}; // [mN]
+	float m_load_sensor_offset[2] = {-107, -142}; // [mN]
 	float m_load_sensor_sensibility[2] = {100, 116.3}; // [mN/V]
 };
 

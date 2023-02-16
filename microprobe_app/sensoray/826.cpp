@@ -26,7 +26,7 @@ const uint Sensoray826::step_per_tour = 200;
 const uint Sensoray826::ustep[] = {256, 16, 16};
 const float Sensoray826::shaft_radius[] = {5., 2.5, 2.5};	// [mm]
 const float Sensoray826::v_manual[] = {1., 1.5, 1.5};		// [mm/s]
-const float Sensoray826::correction_coef[] = {0.66, 1.1, 1.25};
+const float Sensoray826::correction_coef[] = {0.66, 1., 1.1};
 const float Sensoray826::pulse_ontime_manual[] = { (1 / (120 * ustep[0] * step_per_tour *((v_manual[0] / shaft_radius[0]) / M_PI)) * 10e7),
 													(1 / (120 * ustep[1] * step_per_tour *((v_manual[1] / shaft_radius[1]) / M_PI)) * 10e7),
 													(1 / (120 * ustep[2] * step_per_tour *((v_manual[2] / shaft_radius[2]) / M_PI)) * 10e7) };

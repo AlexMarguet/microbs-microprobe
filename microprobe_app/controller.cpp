@@ -137,29 +137,6 @@ bool Controller::controlLoopPID() {
 void Controller::fixedSpeedControl() {
     float epsilon = 5.;
 
-    // m_load[Sensoray826::load_sensor_u] = m_board.getLoadSensor(Sensoray826::load_sensor_u);
-    // if (m_load[Sensoray826::load_sensor_u]>(m_f_u_ref+epsilon)) {
-    //     m_board.setMotorDirection(Sensoray826::tendon_u, Sensoray826::release);
-    //     m_board.setMotorSpeed(Sensoray826::tendon_u, m_v);
-    //     m_board.motorOn(Sensoray826::tendon_u);
-    // } else if (m_load[Sensoray826::load_sensor_u]<(m_f_u_ref-epsilon)) {
-    //     m_board.setMotorDirection(Sensoray826::tendon_u, Sensoray826::reel);
-    //     m_board.motorOn(Sensoray826::tendon_u);
-    // } else {
-    //     m_board.motorOff(Sensoray826::tendon_u);
-    // }
-
-    // m_load[Sensoray826::load_sensor_d] = m_board.getLoadSensor(Sensoray826::load_sensor_d);
-    // if (m_load[Sensoray826::load_sensor_d]>(m_f_d_ref+epsilon)) {
-    //     m_board.setMotorDirection(Sensoray826::tendon_d, Sensoray826::release);
-    //     m_board.motorOn(Sensoray826::tendon_d);
-    // } else if (m_load[Sensoray826::load_sensor_d]<(m_f_d_ref-epsilon)) {
-    //     m_board.setMotorDirection(Sensoray826::tendon_d, Sensoray826::reel);
-    //     m_board.motorOn(Sensoray826::tendon_d);
-    // } else {
-    //     m_board.motorOff(Sensoray826::tendon_d);
-    // }
-
     m_load[Sensoray826::load_sensor_u] = m_board.getLoadSensor(Sensoray826::load_sensor_u);
     m_error[Sensoray826::load_sensor_u] = -(m_f_u_ref - m_load[Sensoray826::load_sensor_u]);
     
@@ -193,19 +170,21 @@ void Controller::fixedSpeedControl() {
 }
 
 void Controller::pidControl() {
+    float pid;
+
     m_load[Sensoray826::load_sensor_u] = m_board.getLoadSensor(Sensoray826::load_sensor_u);
     m_error[Sensoray826::load_sensor_u] = -(m_f_u_ref - m_load[Sensoray826::load_sensor_u]);
 
     t_prev_error[Sensoray826::load_sensor_u].push_back(m_error[Sensoray826::load_sensor_u]);
     t_prev_error[Sensoray826::load_sensor_u].erase(t_prev_error[Sensoray826::load_sensor_u].begin());
 
-    // for (int n : t_prev_error[Sensoray826::load_sensor_u]) {cout << n << " ";}
-    // cout << endl;
-    // auto result = std::reduce(t_prev_error[Sensoray826::load_sensor_u].begin(), t_prev_error[Sensoray826::load_sensor_u].end());
-    // cout << result << endl;
-
-    m_v_tendon_u = m_k_p * m_error[Sensoray826::load_sensor_u] + m_k_i * (std::reduce(t_prev_error[Sensoray826::load_sensor_u].begin(), t_prev_error[Sensoray826::load_sensor_u].end())) / m_integration_period
+    pid = m_k_p * m_error[Sensoray826::load_sensor_u] + m_k_i * (std::reduce(t_prev_error[Sensoray826::load_sensor_u].begin(), t_prev_error[Sensoray826::load_sensor_u].end())) / m_integration_period
             + m_k_d * (m_error[Sensoray826::load_sensor_u] - m_prev_error[Sensoray826::load_sensor_u]);
+
+    // m_v_tendon_u += pid;
+    m_v_tendon_u = pid;
+
+    m_prev_error[Sensoray826::load_sensor_u] = m_error[Sensoray826::load_sensor_u];
 
     if (m_v_tendon_u >= m_v_tendon_rel_nom) {
         m_v_tendon_u = m_v_tendon_rel_nom;
@@ -213,22 +192,23 @@ void Controller::pidControl() {
         m_v_tendon_u = -m_v_tendon_rel_nom;
     }
 
-   m_v_tendon_u = m_v_probe + m_v_tendon_u;
-  // m_v_tendon_u += 0.01*PID_value;
-
-
-    // m_prev_error[Sensoray826::load_sensor_u] = m_error[Sensoray826::load_sensor_u];
-
-    // std::cout << "error = "<< m_error[Sensoray826::load_sensor_u]  << "v tendon u = " << m_v_tendon_u;
+    m_v_tendon_u = m_v_probe + m_v_tendon_u;
     
     m_board.motorOn(Sensoray826::tendon_u, m_v_tendon_u);
 
 
     m_load[Sensoray826::load_sensor_d] = m_board.getLoadSensor(Sensoray826::load_sensor_d);
     m_error[Sensoray826::load_sensor_d] = -(m_f_d_ref - m_load[Sensoray826::load_sensor_d]);
-    m_v_tendon_d = m_k_p * m_error[Sensoray826::load_sensor_d] + m_k_i * (m_error[Sensoray826::load_sensor_d] + m_prev_error[Sensoray826::load_sensor_d]) 
+
+    t_prev_error[Sensoray826::load_sensor_d].push_back(m_error[Sensoray826::load_sensor_d]);
+    t_prev_error[Sensoray826::load_sensor_d].erase(t_prev_error[Sensoray826::load_sensor_d].begin());
+
+    pid = 0.5 * m_k_p * m_error[Sensoray826::load_sensor_d] + m_k_i * (std::reduce(t_prev_error[Sensoray826::load_sensor_d].begin(), t_prev_error[Sensoray826::load_sensor_d].end())) / m_integration_period
             + m_k_d * (m_error[Sensoray826::load_sensor_d] - m_prev_error[Sensoray826::load_sensor_d]);
     
+    // m_v_tendon_d += pid;
+    m_v_tendon_d = pid;
+
     if (m_v_tendon_d >= m_v_tendon_rel_nom) {
         m_v_tendon_d = m_v_tendon_rel_nom;
     } else if (m_v_tendon_d <= -m_v_tendon_rel_nom) {
@@ -238,8 +218,6 @@ void Controller::pidControl() {
     m_v_tendon_d = m_v_probe + m_v_tendon_d;
 
     m_prev_error[Sensoray826::load_sensor_d] = m_error[Sensoray826::load_sensor_d];
-
-    // std::cout << "error = "<< m_error[Sensoray826::load_sensor_d]  << "v tendon d = " << m_v_tendon_d << std::endl;
 
     m_board.motorOn(Sensoray826::tendon_d, m_v_tendon_d);
 }
