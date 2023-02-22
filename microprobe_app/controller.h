@@ -80,15 +80,6 @@ private:
 
     int m_integration_period = 2;
     std::array<std::vector<float>, 2> t_prev_error;
-
-    //Recorded data
-    // vector<float> m_rec_time;
-    // vector<float> m_rec_x_probe; // expected, not measured
-    // vector<vector<float>> m_rec_load;
-    // vector<vector<float>>  m_rec_f_ref;
-    // vector<float> m_rec_v_probe;
-    // vector<vector<float>>  m_rec_v_tendon;
-
 };
 
 #endif // CONTROLLER_H

@@ -289,38 +289,6 @@ void Sensoray826::dioSourceReset() {
 }
 
 void Sensoray826::loadSensorCalibration(LoadSensor load_sensor) {
-	// float expected_weight_1 = -14.9, expected_weight_2 = -25.0, expected_weight_3 = -36.9;
-
-	// cout << "Remove weights from the sensor" << endl;
-	// Sleep(10000);
-	// m_load_sensor_offset = this->getLoadSensor(load_sensor);
-	// cout << "Offset: " << m_load_sensor_offset << endl;
-
-	// cout << "Put weight 1 on the sensor" << endl;
-	// Sleep(10000);
-	// float weight_1 = this->getLoadSensor(load_sensor);
-	// cout << "Weight 1: " << weight_1 << endl;
-
-	// cout << "Put weight 2 on the sensor" << endl;
-	// Sleep(10000);
-	// float weight_2 = this->getLoadSensor(load_sensor);
-	// cout << "Weight 2: " << weight_2 << endl;
-
-	// cout << "Put weight 3 on the sensor" << endl;
-	// Sleep(10000);
-	// float weight_3 = this->getLoadSensor(load_sensor);
-	// cout << "Weight 3: " << weight_3 << endl;
-
-	// float drift = (weight_1/expected_weight_1 + weight_2/expected_weight_2 + weight_3/expected_weight_3) / 3;
-	// cout << "Drift: " << drift << endl;
-
-	// if (drift < 1.) {
-	// 	cout << "Drift too low, corrected to 1." << endl;
-	// 	drift = 1.;
-	// }
-	// m_load_sensor_drift = drift;
-	
-	// cout << "Corrected weights: " << weight_1/drift << " " <<weight_2/drift << " " << weight_3/drift << endl;
 }
 
 void Sensoray826::loadSensorOffsetCalibration(LoadSensor load_sensor) {
@@ -339,7 +307,6 @@ float Sensoray826::getLoadSensor(LoadSensor load_sensor) {
 	
 	float out = (adc_val * sensor_range) / max_val;
 
-	// return -(out - m_load_sensor_offset) / m_load_sensor_drift;
 	return -(out * m_load_sensor_sensibility[load_sensor]  - m_load_sensor_offset[load_sensor]);
 }
 

@@ -28,6 +28,8 @@ set(PROJECT_SOURCES
         sensoray/826.h
         tools/data_saver.cpp
         tools/data_saver.h
+        tools/experiment_gen.cpp
+        tools/experiment_gen.h
         # qwidgets/qcustomplot.cpp
         # qwidgets/qcustomplot.h
 )
