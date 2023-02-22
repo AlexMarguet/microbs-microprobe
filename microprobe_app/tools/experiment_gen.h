@@ -1,6 +1,12 @@
 #ifndef TOOLS_EXPERIMENT_GEN_H
 #define TOOLS_EXPERIMENT_GEN_H
 
+#include <cstdio>
+#include <iostream>
+#include <vector>
+
+typedef unsigned int uint;
+
 using namespace std;
 
 class ExperimentPreset {

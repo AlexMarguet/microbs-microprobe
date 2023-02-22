@@ -19,6 +19,7 @@
 
 #include "sensoray/826.h"
 #include "tools/data_saver.h"
+#include "tools/experiment_gen.h"
 #include "controller.h"
 
 QT_BEGIN_NAMESPACE
