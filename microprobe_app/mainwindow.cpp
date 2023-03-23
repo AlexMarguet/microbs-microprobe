@@ -3,7 +3,7 @@
 
 using namespace std;
 
-MainWindow::MainWindow(Sensoray826 board, Controller controller, DataSaver& data_saver, QWidget *parent)
+MainWindow::MainWindow(Sensoray826& board, Controller& controller, DataSaver& data_saver, QWidget *parent)
     : m_board(board),
     m_controller(controller),
     m_data_saver(data_saver),
@@ -12,6 +12,11 @@ MainWindow::MainWindow(Sensoray826 board, Controller controller, DataSaver& data
 {
     m_board.dioSourceReset();
 
+    /*
+    Generate the window setup from mainwindow.ui.
+    Link all QObjects to actual members with findChild().
+    Connect object signals to slot functions (callbacks) with connect().
+    */
     ui->setupUi(this);
 
     //Control box
@@ -69,7 +74,7 @@ MainWindow::MainWindow(Sensoray826 board, Controller controller, DataSaver& data
     m_f_ref_dec_button = findChild<QPushButton*>("pushButton_15");
     m_f_increment = findChild<QLineEdit*>("lineEdit_7");
     m_f_ref_lineedit = findChild<QLineEdit*>("lineEdit_4");
-    m_pid_checkbox = findChild<QCheckBox*>("checkBox_2");
+    m_preset_checkbox = findChild<QCheckBox*>("checkBox_2");
 
     connect(m_start_button, SIGNAL(pressed()), this, SLOT(insertion()));
     connect(m_stop_button, SIGNAL(pressed()), this, SLOT(insertion()));
@@ -96,22 +101,38 @@ MainWindow::MainWindow(Sensoray826 board, Controller controller, DataSaver& data
 
     m_emergency_stop_button = findChild<QPushButton*>("pushButton_12");
     connect(m_emergency_stop_button, SIGNAL(pressed()), this, SLOT(launchScript()));
-    m_script_button = findChild<QPushButton*>("pushButton_22");
-    connect(m_script_button, SIGNAL(pressed()), this, SLOT(launchScript()));
+
+    //Preset box
+    m_preset_add_button = findChild<QPushButton*>("pushButton_5");
+    m_preset_reset_button = findChild<QPushButton*>("pushButton_6");
+    m_preset_start_lineedit = findChild<QLineEdit*>("lineEdit_17");
+    m_preset_stop_lineedit = findChild<QLineEdit*>("lineEdit_18");
+    m_preset_force_start_lineedit = findChild<QLineEdit*>("lineEdit_19");
+    m_preset_force_stop_lineedit = findChild<QLineEdit*>("lineEdit_20");
+    m_preset_step = findChild<QCheckBox*>("checkBox_3");
+    m_preset_ramp = findChild<QCheckBox*>("checkBox_4");
+
+    connect(m_preset_add_button, SIGNAL(pressed()), this, SLOT(presetConfig()));
+    connect(m_preset_reset_button, SIGNAL(pressed()), this, SLOT(presetConfig()));
+    connect(m_preset_step, SIGNAL(clicked()), this, SLOT(presetConfig()));
+    connect(m_preset_ramp, SIGNAL(clicked()), this, SLOT(presetConfig()));
 
     //Timer
+    /*
+    One timer is used to periodically refresh sensor value in the GUI.
+    One is used as the loop trigger for controller events.
+    */
     m_timer = new QTimer(this);
     connect(m_timer, SIGNAL(timeout()), this, SLOT(updateValue()));
     m_timer->start(505);
     m_control_loop_timer = new QTimer(this);
+    m_control_loop_timer->setTimerType(Qt::PreciseTimer);
 
     this->applyParameters();
-    m_board.setMotorSpeed(Sensoray826::tendon_d, 2);
 }
 
 MainWindow::~MainWindow()
 {
-    // m_data_saver.closeCsv();
     m_controller.stop();
     m_board.dioSourceReset();
     m_board.close();
@@ -193,15 +214,24 @@ void MainWindow::applyParameters() {
 
         m_parameters_apply_button->setEnabled(false);
     } else if (sender_obj != nullptr) {
+        /*
+        Each textline modification triggers this callback and enables the apply button.
+        Modification is registered as soon as the value changes, which is why we use an apply button to prevent absurd values during editing.
+        */
         m_parameters_apply_button->setEnabled(true);
     }
 }
 
+/*
+Hold is currently linked to controller's fixedSpeedControl.
+This can be changed in the controller.hold() function, just make sure to reset previous force error values.
+*/
 void MainWindow::holdCheckbox() {
     if (m_hold_checkbox->isChecked()) {
-        m_controller.startSetup();
+        m_controller.startHold();
         delete m_control_loop_timer;
         m_control_loop_timer = new QTimer(this);
+        m_control_loop_timer->setTimerType(Qt::PreciseTimer);
         connect(m_control_loop_timer, SIGNAL(timeout()), this, SLOT(hold()));
         m_control_loop_timer->start(100);
     } else {
@@ -230,17 +260,16 @@ void MainWindow::insertion() {
     QObject* sender_obj = sender();
     // QPushButton* button = qobject_cast<QPushButton*>(sender());
     if (sender_obj == m_start_button) {
+        //We always delete the control loop timer to disconnect from the other slots it may have been linked to.
         delete m_control_loop_timer;
         m_control_loop_timer = new QTimer(this);
-        if (m_pid_checkbox->isChecked()) {
-            connect(m_control_loop_timer, SIGNAL(timeout()), this, SLOT(controlLoopPID()));
-        } else {
-            connect(m_control_loop_timer, SIGNAL(timeout()), this, SLOT(controlLoop()));
-        }
+        m_control_loop_timer->setTimerType(Qt::PreciseTimer);
+        connect(m_control_loop_timer, SIGNAL(timeout()), this, SLOT(controlLoopPID()));
         m_controller.start(10);
+        //Measure real execution duration.
         m_insertion_start_time = chrono::steady_clock::now();
         m_last_start_time = m_insertion_start_time;
-        m_control_loop_timer->start(90);
+        m_control_loop_timer->start(100);
         m_stop_button->setEnabled(true);
     } else if (sender_obj == m_stop_button) {
         m_controller.stop();
@@ -249,63 +278,29 @@ void MainWindow::insertion() {
     } else if (sender_obj == m_reel_back_button) {
         delete m_control_loop_timer;
         m_control_loop_timer = new QTimer(this);
-        if (m_pid_checkbox->isChecked()) {
-            connect(m_control_loop_timer, SIGNAL(timeout()), this, SLOT(controlLoopPID()));
-        } else {
-            connect(m_control_loop_timer, SIGNAL(timeout()), this, SLOT(controlLoop()));
-        }
+        m_control_loop_timer->setTimerType(Qt::PreciseTimer);
+        connect(m_control_loop_timer, SIGNAL(timeout()), this, SLOT(controlLoopPID()));
         m_controller.startReelBack(10);
-        m_insertion_start_time = chrono::steady_clock::now();
-        m_last_start_time = m_insertion_start_time;
-        m_control_loop_timer->start(90);
+        m_control_loop_timer->start(100);
     }
 }
 
-void MainWindow::setup() {
-    if(this->m_controller.setup()) {
-        m_control_loop_timer->stop();
-    }
-}
-
-void MainWindow::controlLoop() { // Mean duration: ~0.2 [ms] ; Mean loop cycle: ~110 [ms]
+void MainWindow::controlLoopPID() { // Mean duration: ~0.2 [ms]
     auto start = chrono::steady_clock::now();
-    chrono::duration<double, milli> elapsed {start - m_last_start_time};
-    // cout << "Loop period: " << elapsed.count() << " ms" << endl;
-
-    if(this->m_controller.controlLoop()) {
-        m_controller.stop();
-        m_control_loop_timer->stop();
-        m_stop_button->setEnabled(false);
-        chrono::duration<double, milli> elapsed {chrono::steady_clock::now() - m_insertion_start_time};
-        cout << "Total insertion duration: " << elapsed.count() << " ms" << endl;
-    }
-    
-    m_last_start_time = start;
-}
-
-void MainWindow::controlLoopPID() { // Mean duration: ~0.2 [ms] ; Mean loop cycle: ~110 [ms]
-    auto start = chrono::steady_clock::now();
+    //Uncomment below for loop period.
     // chrono::duration<double, milli> elapsed {start - m_last_start_time};
     // cout << "Loop period: " << elapsed.count() << " ms" << endl;
 
-
-    // m_k_loop++;
-    // if (m_k_loop >= m_step_start[m_step_iter]) {
-    //     if (m_k_loop < m_step_stop[m_step_iter]) {
-    //         m_controller.setFRef(m_step_height[m_step_iter]);
-    //     } else {
-    //         m_controller.setFRef(0);
-    //         if (m_step_iter < m_max_steps) {
-    //             m_step_iter++;
-    //         }
-    //     }
-    // }
+    chrono::duration<double, milli> elapsed {start - m_insertion_start_time};
+    if (m_preset_checkbox->isChecked()) {
+        float f = m_preset_experiment.getCurrentFRef(elapsed.count()/1000);
+        m_controller.setFRef(f);
+        // cout << "Force ref at " << elapsed.count() << " = " << f << endl;
+    }
 
     if(this->m_controller.controlLoopPID()) {
         m_controller.stop();
         m_control_loop_timer->stop();
-        m_k_loop = 0;
-        m_step_iter = 0;
         m_stop_button->setEnabled(false);
         chrono::duration<double, milli> elapsed {chrono::steady_clock::now() - m_insertion_start_time};
         cout << "Total insertion duration: " << elapsed.count() << " ms" << endl;
@@ -314,7 +309,7 @@ void MainWindow::controlLoopPID() { // Mean duration: ~0.2 [ms] ; Mean loop cycl
     m_last_start_time = start;
 }
 
-
+//Small button scripts
 void MainWindow::launchScript() {
     QObject* sender_obj = sender();
 
@@ -322,23 +317,18 @@ void MainWindow::launchScript() {
         cout << "emergency stop" << endl;
         delete m_control_loop_timer;
         m_control_loop_timer = new QTimer(this);
+        m_control_loop_timer->setTimerType(Qt::PreciseTimer);
         m_controller.stop();
         this->m_board.dioSourceReset();
     } else if (sender_obj == m_load_sensor_u_to_zero_button) {
         this->m_board.loadSensorOffsetCalibration(Sensoray826::load_sensor_u);
     } else if (sender_obj == m_load_sensor_d_to_zero_button) {
         this->m_board.loadSensorOffsetCalibration(Sensoray826::load_sensor_d);
-    } else if (sender_obj == m_script_button) {
-        auto start = chrono::steady_clock::now();
-        m_board.motorOn(Sensoray826::tendon_d, 3);
-        Sleep(5000);
-        chrono::duration<double, milli> elapsed {chrono::steady_clock::now() - start};
-        cout << "Script duration: " << elapsed.count() << " ms" << endl;
-        m_board.motorOn(Sensoray826::tendon_d, 0);
     }
 }
 
 void MainWindow::updateValue() {
+    //Could be improved to call getLoadSensor only in the controller, and display the value without retrieving it from the board again.
     m_load_sensor_u->setText(QString::number(m_board.getLoadSensor(Sensoray826::load_sensor_u)));
     m_load_sensor_d->setText(QString::number(m_board.getLoadSensor(Sensoray826::load_sensor_d)));
 
@@ -351,8 +341,41 @@ void MainWindow::dataRecord() {
 
     if (sender_obj == m_record_button) {
         m_data_saver.createCsv(m_file_name_lineedit->text().toStdString());
-        // m_data_saver.writeHeader();
+        //Could be improved to read parameters from the controller to make sure they correspond.
         string params = "kp=" + m_k_p->text().toStdString() + ",ki=" + m_k_i->text().toStdString() + ",kd=" + m_k_d->text().toStdString();
         m_data_saver.writeHeader(params);
+    }
+}
+
+void MainWindow::presetConfig() {
+    QObject* sender_obj = sender();
+
+    if (sender_obj == m_preset_add_button) {
+        if (m_preset_step->isChecked()){
+            m_preset_experiment.add(m_preset_start_lineedit->text().toFloat(), m_preset_stop_lineedit->text().toFloat(),
+                                    m_preset_force_start_lineedit->text().toFloat(), m_preset_force_start_lineedit->text().toFloat(), ExperimentPreset::step);
+        } else {
+            m_preset_experiment.add(m_preset_start_lineedit->text().toFloat(), m_preset_stop_lineedit->text().toFloat(),
+                                    m_preset_force_start_lineedit->text().toFloat(), m_preset_force_stop_lineedit->text().toFloat(), ExperimentPreset::ramp);
+        }
+    } else if (sender_obj == m_preset_reset_button) {
+        m_preset_experiment.reset();
+    } else if (sender_obj == m_preset_step) {
+        if (m_preset_step->isChecked()) {
+            m_preset_ramp->setChecked(false);
+            m_preset_force_stop_lineedit->setEnabled(false);
+        } else {
+            m_preset_ramp->setChecked(true);
+            m_preset_force_stop_lineedit->setEnabled(true);
+        }
+
+    } else if (sender_obj == m_preset_ramp) {
+        if (m_preset_ramp->isChecked()) {
+            m_preset_step->setChecked(false);
+            m_preset_force_stop_lineedit->setEnabled(true);
+        } else {
+            m_preset_step->setChecked(true);
+            m_preset_force_stop_lineedit->setEnabled(false);
+        }
     }
 }

@@ -21,4 +21,4 @@
 #include "controller.h"
 #include "tools/data_saver.h"
 
-#endif // #ifndef MAIN_H
+#endif // MAIN_H

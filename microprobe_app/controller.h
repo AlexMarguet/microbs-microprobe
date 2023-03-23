@@ -15,16 +15,12 @@
 
 class Controller {
 public:
-    Controller(Sensoray826 board, DataSaver& data_saver);
+    Controller(Sensoray826& board, DataSaver& data_saver);
 
-    void startSetup();
-    
-    bool setup();
+    void startHold();
 
     void hold();
-
-    bool controlLoop();
-
+    
     bool controlLoopPID();
 
     void start(float control_freq);
@@ -33,6 +29,7 @@ public:
 
     void stop();
 
+    //Get-Set
     void setVProbeNom(float v_probe_nom);
     void setVTendonRelNom(float v_tendon_rel_nom);
     void setXProbeMax(float x_probe_max);
@@ -41,7 +38,6 @@ public:
     void setKP(float k_p);
     void setKI(float k_i);
     void setKD(float k_d);
-
     float getFURef();
     float getFDRef();
     
@@ -50,7 +46,7 @@ private:
     void fixedSpeedControl();
     void pidControl();
 
-    Sensoray826 m_board;
+    Sensoray826& m_board;
     
     DataSaver& m_data_saver;
 
@@ -76,10 +72,9 @@ private:
     float m_k_d;
 
     float m_error[2] = {0, 0};
-    float m_prev_error[2] = {0, 0};
 
     int m_integration_period = 2;
-    std::array<std::vector<float>, 2> t_prev_error;
+    std::array<std::vector<float>, 2> m_prev_error;
 };
 
 #endif // CONTROLLER_H

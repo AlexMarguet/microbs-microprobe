@@ -31,9 +31,10 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    MainWindow(Sensoray826 board, Controller controller, DataSaver& data_saver, QWidget *parent = nullptr);
+    MainWindow(Sensoray826& board, Controller& controller, DataSaver& data_saver, QWidget *parent = nullptr);
     ~MainWindow();
 
+// Slots are Qt callback mechanism, callback functions must be registered below
 private slots:
     void activateMotor();
 
@@ -49,10 +50,6 @@ private slots:
 
     void fRefModif();
 
-    void setup();
-
-    void controlLoop();
-
     void controlLoopPID();
 
     void launchScript();
@@ -61,10 +58,12 @@ private slots:
 
     void dataRecord();
 
+    void presetConfig();
+
 private:
     Ui::MainWindow *ui;
-    Sensoray826 m_board;
-    Controller m_controller;
+    Sensoray826& m_board;
+    Controller& m_controller;
     DataSaver& m_data_saver;
 
     QTimer* m_timer;
@@ -108,19 +107,21 @@ private:
     QPushButton* m_f_ref_dec_button;
     QLineEdit* m_f_increment;
     QLineEdit* m_f_ref_lineedit;
-    QCheckBox* m_pid_checkbox;
+    QCheckBox* m_preset_checkbox;
 
     float m_f_ref = 0;
     chrono::time_point<chrono::steady_clock> m_last_start_time;
     chrono::time_point<chrono::steady_clock> m_insertion_start_time;
 
-    uint m_k_loop = 0;
-    uint m_step_start[2] = {20, 80};
-    uint m_step_stop[2] = {60, 120};
-    float m_step_height[2] = {100, -100};
-    uint m_step_iter = 0;
-    uint m_max_steps = 1;
-
+    QPushButton* m_preset_add_button;
+    QPushButton* m_preset_reset_button;
+    QLineEdit* m_preset_start_lineedit;
+    QLineEdit* m_preset_stop_lineedit;
+    QLineEdit* m_preset_force_start_lineedit;
+    QLineEdit* m_preset_force_stop_lineedit;
+    QCheckBox* m_preset_step;
+    QCheckBox* m_preset_ramp;
+    ExperimentPreset m_preset_experiment;
     
     //Datasave box
     QPushButton* m_record_button;
@@ -128,8 +129,5 @@ private:
     
     //Out-of-box
     QPushButton* m_emergency_stop_button;
-
-    QPushButton* m_script_button;
-
 };
 #endif // MAINWINDOW_H

@@ -15,8 +15,6 @@
 
 #include "826api.h"
 
-#define MIN_ALLOWED_PWM_T	100
-
 class Sensoray826 {
 public:
 	// Constants
@@ -53,7 +51,7 @@ public:
 
 	Sensoray826();
 
-	// ~Sensoray826(); //Didnt work because I was making a copy and not an &
+	// ~Sensoray826(); //Would previously not work because I was not using a reference to the object, could be put back.
 
 	void open();
 
@@ -61,6 +59,7 @@ public:
 
 	void motorsSetup();
 
+	//Either set motor direction and speed before calling motor on, either provide speed and both will be set according to the sign.
 	void motorOn(Motor motor);
 	void motorOn(Motor motor, float speed);
 
@@ -71,11 +70,7 @@ public:
 
 	void setMotorSpeed(Motor motor, float speed);
 
-	void dioIn();
-
 	void dioOut(uint chan, VoltLevel level);
-
-	int waitForDioFallingEdge(uint dio);
 
 	int createHwTimer(uint chan, uint period);
 
@@ -91,8 +86,6 @@ public:
 
 	void dioSourceReset();
 
-	void loadSensorCalibration(LoadSensor load_sensor);
-
 	void loadSensorOffsetCalibration(LoadSensor load_sensor);
 
 	float getLoadSensor(LoadSensor load_sensor);
@@ -100,8 +93,6 @@ public:
 	void adcSetup();
 
 	int16_t adcIn(int slot);
-
-	void dacOut();
 
 private:
 	uint m_board = 0;

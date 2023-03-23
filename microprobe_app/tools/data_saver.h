@@ -20,16 +20,16 @@ public:
 	void createCsv(string name);
 
 	void writeHeader();
-	void writeHeader(string add);
+	void writeHeader(string add); //For example pid parameters.
 
 	void writeCsv(string content);
 
 	void writeDataLine(float* data, int size);
 
-	void closeCsv();
-
 private:
-	// fstream m_file_out;
+	/*
+	fstream member is not compatible with constructor (or only copy-constructor ? to check), so we can't keep the file open and need to use open() each time we write.
+	*/
 	string m_file_name;
 };
 

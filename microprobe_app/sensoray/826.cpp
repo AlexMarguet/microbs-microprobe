@@ -2,9 +2,9 @@
 
 using namespace std;
 
-const Sensoray826::VoltLevel Sensoray826::motor_direction[3][2] = {{low, high}, {high, low}, {high, low}};
+const Sensoray826::VoltLevel Sensoray826::motor_direction[3][2] = {{low, high}, {high, low}, {high, low}}; //Output voltage corresponding to enum Direction for each motor.
 
-const uint Sensoray826::min_pulse_ontime = 0; //! TBD
+const uint Sensoray826::min_pulse_ontime = 0; //! To be defined.
 
 const uint Sensoray826::motor_pulse_dio[] = {0, 1, 2};		// board layout: {47, 45, 43}
 const uint Sensoray826::motor_dir_dio[] = {10, 11, 12};		// board layout: {27, 25, 23}
@@ -12,7 +12,7 @@ const uint Sensoray826::motor_ctr_chan[] = {0, 1, 2};
 
 // const uint Sensoray826::adc_gain = S826_ADC_GAIN_2;	// -5 <-> +5 [V]
 const uint Sensoray826::adc_gain = S826_ADC_GAIN_1;	// -10 <-> +10 [V] -- sensor range
-const int Sensoray826::adc_t_settle = -3;			// -3 or 3 ? Not clear, page 31/107
+const int Sensoray826::adc_t_settle = -3;			// -3 or 3 ? Not clear, see page 31/107
 const uint Sensoray826::adc_in_chan[] = {0, 1};		// board layout: {4, 6} on J1 {black, green}
 const float Sensoray826::sensor_range = 10.;
 
@@ -86,6 +86,49 @@ void Sensoray826::motorOn(Motor motor) {
 	this->routeCounterOutput(ctr, dio);
 }
 
+void Sensoray826::motorOn(Motor motor, float speed) {
+	if (speed == 0.) {
+		this->motorOff(motor);
+		return;
+	}
+	Direction dir;
+
+	if (motor == probe) {
+		if (speed <= 0) {
+			dir = backward;
+			speed = -speed;
+		} else {
+			dir = forward;
+		}
+	} else {
+		if (speed <= 0) {
+			dir = reel;
+			speed = -speed;
+		} else {
+			dir = release;
+		}
+	}
+
+	float period =  1000000 * correction_coef[motor] * (shaft_radius[motor] * rad_per_step) / (speed * ustep[motor]); // [s] to [us]
+
+	if (period >= UINT_MAX) {
+		period = UINT_MAX; // limit reached at ~1e-7 [mm/s]
+	}
+
+	uint pulse_ontime, pulse_offtime; // us
+	if (period >= min_pulse_ontime * 2) {
+		pulse_ontime = (uint) period/2;
+		pulse_offtime = (uint) period/2;
+	}
+	//! Also block for uint overflow at low speed
+
+	uint ctr = motor_ctr_chan[motor];
+
+	this->setMotorDirection(motor, dir);
+	this->setPWM(ctr, pulse_ontime, pulse_offtime);
+	this->motorOn(motor);
+}
+
 void Sensoray826::motorOff(Motor motor) {
 	uint ctr = motor_ctr_chan[motor];
 	uint dio = motor_pulse_dio[motor];
@@ -133,58 +176,7 @@ void Sensoray826::setMotorSpeed(Motor motor, float speed) {
 
 	uint ctr = motor_ctr_chan[motor];
 
-	// cout << "speed =" << speed << " and period =" << period << endl;
 	this->setPWM(ctr, pulse_ontime, pulse_offtime);
-}
-
-void Sensoray826::motorOn(Motor motor, float speed) {
-	if (speed == 0.) {
-		this->motorOff(motor);
-		return;
-	}
-	Direction dir;
-
-	if (motor == probe) {
-		if (speed <= 0) {
-			dir = backward;
-			speed = -speed;
-		} else {
-			dir = forward;
-		}
-	} else {
-		if (speed <= 0) {
-			dir = reel;
-			speed = -speed;
-		} else {
-			dir = release;
-		}
-	}
-
-	float period =  1000000 * correction_coef[motor] * (shaft_radius[motor] * rad_per_step) / (speed * ustep[motor]); // [s] to [us]
-
-	if (period >= UINT_MAX) {
-		period = UINT_MAX; // limit reached at ~1e-7 [mm/s]
-	}
-
-	uint pulse_ontime, pulse_offtime; // us
-	if (period >= min_pulse_ontime * 2) {
-		pulse_ontime = (uint) period/2;
-		pulse_offtime = (uint) period/2;
-	}
-	//! Also block for uint overflow at low speed
-
-	uint ctr = motor_ctr_chan[motor];
-
-	// cout << "speed =" << speed << " and period =" << period << endl;
-	this->setMotorDirection(motor, dir);
-	this->setPWM(ctr, pulse_ontime, pulse_offtime);
-	this->motorOn(motor);
-}
-
-void Sensoray826::dioIn() {
-	int errcode;
-	uint data[2];
-	errcode = S826_DioInputRead(m_board, data);
 }
 
 // Pins are active-low: CLR = 5[V] and SET = 0[V]
@@ -192,27 +184,16 @@ void Sensoray826::dioOut(uint dio, VoltLevel level) {
 	int errcode;
 	uint data[2] = {0, 0};
 
-	//uint mode = S826_BITCLR;
-	//uint mode = S826_BITSET;
-	//uint mode = S826_BITWRITE;
-
 	if (dio >= S826_NUM_DIO) {
-		return; //S826_ERR_VALUE; // bad channel number
+		return; //return S826_ERR_VALUE; //Bad channel number.
 	}
 		
 	data[dio > 23] |= (1 << (dio % 24));
 
 	errcode = S826_DioOutputWrite(m_board, data, level);
-	// printf("dioOut error code: %d\n", errcode);
 }
 
-int Sensoray826::waitForDioFallingEdge(uint dio)
-{
-	uint rise[] = { 0, 0 }; // not interested in rising edge
-	uint fall[] = { (dio < 24) << (dio % 24), (dio > 23) << (dio % 24) }; // interested in falling edge
-	S826_DioCapEnablesWrite(m_board, rise, fall, S826_BITSET); // Enable falling edge detection.
-	return S826_DioCapRead(m_board, fall, 0, S826_WAIT_INFINITE); // Block until falling edge.
-}
+
 
 // Configure a counter as a 20 ns pulse generator and start it running.
 int Sensoray826::createHwTimer(uint chan, uint period) // period in microseconds, channel 0 to 5
@@ -288,13 +269,9 @@ void Sensoray826::dioSourceReset() {
 	S826_SafeWrenWrite(m_board, S826_SAFEN_SWD); // Disable writes to DIO signal router.
 }
 
-void Sensoray826::loadSensorCalibration(LoadSensor load_sensor) {
-}
-
 void Sensoray826::loadSensorOffsetCalibration(LoadSensor load_sensor) {
 	m_load_sensor_offset[load_sensor] -= this->getLoadSensor(load_sensor);
 }
-
 
 float Sensoray826::getLoadSensor(LoadSensor load_sensor) {
 	float adc_val = (float)this->adcIn(load_sensor);
@@ -310,11 +287,14 @@ float Sensoray826::getLoadSensor(LoadSensor load_sensor) {
 	return -(out * m_load_sensor_sensibility[load_sensor]  - m_load_sensor_offset[load_sensor]);
 }
 
+/*
+For some reason, channels are not properly routed to slots, requires to use 826demo program to link adc prior to launching this.
+*/
 void Sensoray826::adcSetup() {
 	S826_AdcSlotConfigWrite(m_board, 0, adc_in_chan[0], adc_t_settle, adc_gain); // measuring on slot 0
 	S826_AdcSlotConfigWrite(m_board, 1, adc_in_chan[1], adc_t_settle, adc_gain); // measuring on slot 1
 	// S826_AdcSlotlistWrite(m_board, 1, S826_BITWRITE); // enable slot 0
-	S826_AdcSlotlistWrite(m_board, 0xFFFF, S826_BITWRITE); // enable slot 0 and 1
+	S826_AdcSlotlistWrite(m_board, 0x0003, S826_BITWRITE); // enable slot 0 and 1
 	S826_AdcTrigModeWrite(m_board, 0); // trigger mode = continuous
 	S826_AdcEnableWrite(m_board, 1); // start adc conversions
 }
@@ -322,7 +302,6 @@ void Sensoray826::adcSetup() {
 int16_t Sensoray826::adcIn(int slot) {
 	int errcode;
 	int slotval[16]; // buffer must be sized for 16 slots
-	// uint slotlist = 1; // only slot 0 is of interest in this example
 	// uint slotlist = 0x0003; // slot 0 and 1
 	uint slotlist = 0xFFFF; // all slots
 	errcode = S826_AdcRead(m_board, slotval, NULL, &slotlist, 100); // wait for IRQ
@@ -335,10 +314,5 @@ int16_t Sensoray826::adcIn(int slot) {
 	// 	printf("%d\n", converted_data);
 	// }
 
-	// cout << "slot 0: " << (int16_t)(slotval[slot] & 0xFFFF) << "slot 1: " << (int16_t)(slotval[1] & 0xFFFF) << endl;
 	return (int16_t)(slotval[slot] & 0xFFFF);
-}
-
-void Sensoray826::dacOut() {
-
 }
